@@ -1,0 +1,42 @@
+{
+  "name": "thequoter",
+  "version": "0.1.0",
+  "description": "Backend for the Quoter project",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "prepare": "husky install"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/MaximMaximS/TheQuoter.git"
+  },
+  "author": "MaximMaximS",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/MaximMaximS/TheQuoter/issues"
+  },
+  "homepage": "https://github.com/MaximMaximS/TheQuoter#readme",
+  "devDependencies": {
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "husky": "^8.0.1",
+    "lint-staged": "^12.4.1",
+    "prettier": "2.6.2"
+  },
+  "lint-staged": {
+    "*.js": "eslint --cache --fix",
+    "**/*": "prettier --write --ignore-unknown"
+  },
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "dotenv": "^16.0.1",
+    "express": "^4.18.1",
+    "express-rate-limit": "^6.4.0",
+    "express-slow-down": "^1.4.0",
+    "helmet": "^5.1.0",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.3.4",
+    "mongoose-unique-validator": "^3.0.0"
+  }
+}
