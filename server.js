@@ -1,52 +1,49 @@
 require("dotenv").config();
-const express = require("express");
-const helmet = require("helmet");
-const slowdown = require("express-slow-down");
-const ratelimit = require("express-rate-limit");
-const db = require("./modules/db");
 
-const PORT = process.env.PORT || 3000;
+main();
 
-const app = express();
+async function main() {
+  const mongoose = require("mongoose");
+  await mongoose.connect(process.env.MONGODB_URI);
+  const express = require("express");
+  const helmet = require("helmet");
+  const slowdown = require("express-slow-down");
+  const ratelimit = require("express-rate-limit");
+  const { errorHandler } = require("./modules/middleware");
 
-app.use(helmet());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+  const PORT = process.env.PORT || 3000;
 
-app.use(
-  slowdown({
-    windowMs: 5 * 60 * 1000, // 15 minutes
-    delayAfter: 50,
-    delayMs: 500,
-  })
-);
+  const app = express();
 
-app.use(
-  ratelimit({
-    windowMs: 5 * 60 * 1000, // 15 minutes
-    max: 100,
-  })
-);
+  app.use(helmet());
+  app.use(express.json());
+  app.use(express.urlencoded({ extended: true }));
 
-const router = require("./modules/router");
-app.use(router);
+  app.use(
+    slowdown({
+      windowMs: 5 * 60 * 1000, // 15 minutes
+      delayAfter: 50,
+      delayMs: 500,
+    })
+  );
 
-app.use(function (_req, res) {
-  res.sendStatus(404);
-});
+  app.use(
+    ratelimit({
+      windowMs: 5 * 60 * 1000, // 15 minutes
+      max: 100,
+    })
+  );
 
-app.listen(PORT, async () => {
-  console.log(`Server running on http://localhost:${PORT}`);
-  try {
-    console.log(
-      await db.register({
-        username: "admin",
-        password: "adminus",
-        email: "sklenicka.maxim@gmail.com",
-      })
-    );
-  } catch (err) {
-    console.log(err);
-    process.exit(0);
-  }
-});
+  const router = require("./modules/router");
+  app.use(router);
+
+  app.use(errorHandler);
+
+  app.use(function (_req, res) {
+    res.sendStatus(404);
+  });
+
+  app.listen(PORT, async () => {
+    console.log(`Server running on http://localhost:${PORT}`);
+  });
+}

@@ -1,18 +1,48 @@
 require("dotenv").config({ path: "../.env" });
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
 const User = require("./models/user");
 const errors = require("./errors");
 const saltRounds = 12;
 
-connect();
-
-async function connect() {
-  await mongoose.connect(process.env.MONGODB_URI);
-  
-}
-
 module.exports = {
+  getToken(user) {
+    return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "1h",
+    });
+  },
+
+  login(body) {
+    return new Promise((resolve, reject) => {
+      if ((!body.email && !body.username) || !body.password) {
+        return reject(new errors.IncorrectLoginError());
+      }
+      User.findOne(
+        {
+          $or: [{ email: body.email }, { username: body.username }],
+        },
+        (err, user) => {
+          if (err) {
+            return reject(new errors.ServerError(err));
+          }
+          if (!user) {
+            return reject(new errors.IncorrectLoginError());
+          }
+          bcrypt.compare(body.password, user.hash, (err2, result) => {
+            
+            if (err2) {
+              return reject(new errors.ServerError(err));
+            }
+            if (!result) {
+              return reject(new errors.IncorrectLoginError());
+            }
+            return resolve(user);
+          });
+        }
+      );
+    });
+  },
   register(body) {
     return new Promise((resolve, reject) => {
       const password = body.password;

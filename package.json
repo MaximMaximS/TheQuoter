@@ -18,7 +18,7 @@
   },
   "homepage": "https://github.com/MaximMaximS/TheQuoter#readme",
   "devDependencies": {
-    "eslint": "^8.15.0",
+    "eslint": "^8.16.0",
     "eslint-config-prettier": "^8.5.0",
     "husky": "^8.0.1",
     "lint-staged": "^12.4.1",
@@ -36,7 +36,7 @@
     "express-slow-down": "^1.4.0",
     "helmet": "^5.1.0",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.3.3",
+    "mongoose": "^6.3.4",
     "mongoose-unique-validator": "^3.0.0"
   }
 }
