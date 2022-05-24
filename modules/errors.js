@@ -1,4 +1,4 @@
-class ValidationError extends Error {
+export class ValidationError extends Error {
   constructor(array) {
     let messages = [];
     let paths = [];
@@ -13,7 +13,7 @@ class ValidationError extends Error {
   }
 }
 
-class ValidatorError extends Error {
+export class ValidatorError extends Error {
   constructor(error) {
     let message = `Path ${error.path} is invalid (${error.kind})`;
     super(message);
@@ -23,7 +23,7 @@ class ValidatorError extends Error {
   }
 }
 
-class ServerError extends Error {
+export class ServerError extends Error {
   constructor(error) {
     super(error.message || error);
     this.name = "ServerError";
@@ -31,36 +31,10 @@ class ServerError extends Error {
   }
 }
 
-class IncorrectLoginError extends Error {
+export class IncorrectLoginError extends Error {
   constructor() {
     super("Incorrect login");
     this.name = "IncorrectLoginError";
   }
 }
 
-module.exports = {
-  handler: (err, _req, res) => {
-    if (err instanceof ValidationError) {
-      res.status(400).json({
-        error: err.message,
-      });
-    } else if (err instanceof IncorrectLoginError) {
-      res.status(401).json({
-        error: err.message,
-      });
-    } else if (err instanceof ServerError) {
-      res.status(500).json({
-        error: err.message,
-      });
-    } else {
-      res.status(500).json({
-        error: "Something went wrong...",
-      });
-    }
-  },
-
-  ValidationError,
-  ValidatorError,
-  ServerError,
-  IncorrectLoginError,
-};
