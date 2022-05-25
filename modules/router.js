@@ -1,8 +1,8 @@
-require("dotenv").config({ path: "../.env" });
-const express = require("express");
-const auth = require("./auth");
+import express from "express";
+import { asyncUtil } from "./middleware.js";
+import * as auth from "./auth.js";
+
 const router = express.Router();
-const { asyncUtil } = require("./middleware");
 
 // Get JWT
 router.post(
@@ -27,4 +27,4 @@ router.post(
   })
 );
 
-module.exports = router;
+export default router;

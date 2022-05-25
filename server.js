@@ -1,15 +1,16 @@
-require("dotenv").config();
+import "dotenv/config";
+import mongoose from "mongoose";
+import express from "express";
+import helmet from "helmet";
+import slowdown from "express-slow-down";
+import ratelimit from "express-rate-limit";
+import { errorHandler } from "./modules/middleware.js";
+import router from "./modules/router.js";
 
 main();
 
 async function main() {
-  const mongoose = require("mongoose");
   await mongoose.connect(process.env.MONGODB_URI);
-  const express = require("express");
-  const helmet = require("helmet");
-  const slowdown = require("express-slow-down");
-  const ratelimit = require("express-rate-limit");
-  const { errorHandler } = require("./modules/middleware");
 
   const PORT = process.env.PORT || 3000;
 
@@ -34,7 +35,6 @@ async function main() {
     })
   );
 
-  const router = require("./modules/router");
   app.use(router);
 
   app.use(errorHandler);
