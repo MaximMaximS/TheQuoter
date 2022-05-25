@@ -7,24 +7,22 @@ export const asyncUtil = (fn) =>
     return Promise.resolve(fnReturn).catch(next);
   };
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
+// eslint-disable-next-line no-unused-vars
 export const errorHandler = (err, _req, res, _next) => {
-  if (err instanceof errors.ValidationError) {
+  if (err instanceof errors.ValidatorError) {
     res.status(400).json({
-      error: err.message,
+      message: err.message,
+      path: err.path,
+      kind: err.kind,
     });
   } else if (err instanceof errors.IncorrectLoginError) {
-    res.status(401).json({
-      error: err.message,
-    });
+    res.sendStatus(401);
   } else if (err instanceof errors.ServerError) {
     res.status(500).json({
-      error: err.message,
+      message: err.message,
     });
   } else {
-    res.status(500).json({
-      error: "Something went wrong...",
-    });
+    res.sendStatus(500);
   }
 };
 

@@ -4,7 +4,7 @@ import * as auth from "./auth.js";
 
 const router = express.Router();
 
-// Get JWT
+// Auth
 router.post(
   "/login",
   asyncUtil(async (req, res) => {

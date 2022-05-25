@@ -46,11 +46,7 @@ export function register(body) {
     const password = body.password;
     // Check if password is 6 characters or more
     if (password.length < 6) {
-      return reject(
-        new errors.ValidationError([
-          new errors.ValidatorError({ path: "password", kind: "minlength" }),
-        ])
-      );
+      return reject(new errors.ValidatorError("password", "minlength"));
     }
     bcrypt.hash(password, saltRounds, function (err, hash) {
       if (err) {
@@ -64,16 +60,9 @@ export function register(body) {
       user.save(function (err) {
         if (err) {
           if (err instanceof mongoose.Error.ValidationError) {
-            let errs = [];
-            for (const key in err.errors) {
-              errs.push(
-                new errors.ValidatorError({
-                  path: err.errors[key].path,
-                  kind: err.errors[key].kind,
-                })
-              );
-            }
-            return reject(new errors.ValidationError(errs));
+            return reject(
+              new errors.ValidatorError(err.errors[0].path, err.errors[0].kind)
+            );
           }
           return reject(new errors.ServerError(err));
         }
