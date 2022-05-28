@@ -1,5 +1,6 @@
 import jwt from "jsonwebtoken";
 import * as errors from "./errors.js";
+import User from "./models/user.js";
 
 export const asyncUtil = (fn) =>
   function asyncUtilWrap(req, res, next) {
@@ -32,15 +33,22 @@ export const verifyToken = (req, res, next) => {
   if (authHeader) {
     const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    jwt.verify(token, process.env.JWT_SECRET, (err, id) => {
       if (err) {
-        return next(new errors.IncorrectLoginError());
+        next();
+        // return next(new errors.IncorrectLoginError());
+      } else {
+        User.findById(id.id, (err, user) => {
+          if (err) {
+            return next(new errors.ServerError(err));
+          }
+          req.user = user;
+          next();
+        });
       }
-
-      req.user = user;
-      next();
     });
   } else {
-    next(new errors.IncorrectLoginError());
+    next();
+    // next(new errors.IncorrectLoginError());
   }
 };

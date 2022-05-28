@@ -4,6 +4,10 @@ import uniqueValidator from "mongoose-unique-validator";
 
 let UserSchema = new Schema(
   {
+    archived: {
+      type: Boolean,
+      default: false,
+    },
     username: {
       type: String,
       required: true,
@@ -32,9 +36,6 @@ let UserSchema = new Schema(
       enum: ["admin", "user"],
       default: "user",
     },
-  },
-  {
-    timestamps: true,
   }
 );
 

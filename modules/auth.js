@@ -2,12 +2,13 @@ import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "./models/user.js";
+import Log from "./models/log.js";
 import * as errors from "./errors.js";
 const saltRounds = 12;
 
 export function getToken(user) {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1h",
+    expiresIn: "1d",
   });
 }
 
@@ -57,7 +58,7 @@ export function register(body) {
         hash,
         email: body.email,
       });
-      user.save(function (err) {
+      user.save(function (err, res) {
         if (err) {
           if (err instanceof mongoose.Error.ValidationError) {
             return reject(
@@ -66,7 +67,18 @@ export function register(body) {
           }
           return reject(new errors.ServerError(err));
         }
-        resolve(user);
+        const log = new Log({
+          type: "User",
+          action: "create",
+          user: res._id,
+        });
+        log.save(function (err) {
+          if (err) {
+            user.remove();
+            return reject(new errors.ServerError(err));
+          }
+          resolve(user);
+        });
       });
     });
   });

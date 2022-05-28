@@ -10,7 +10,6 @@
   },
   "rules": {
     "semi": ["error", "always"],
-    "quotes": ["error", "double"],
     "eqeqeq": "error",
     "no-else-return": "error",
     "no-var": "error",
