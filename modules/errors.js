@@ -20,6 +20,9 @@ export class ValidatorError extends Error {
   path;
   constructor(path, kind) {
     switch (kind) {
+      case "notallowed":
+        super("To use state 'pending' or 'rejected' you must be logged in.");
+        break;
       case "required":
         super(`${path} is required`);
         break;
@@ -36,7 +39,7 @@ export class ValidatorError extends Error {
         super(`${path} does not match the pattern`);
         break;
       default:
-        super(`${path} is not valid`);
+        super(`${path} is not valid (${kind})`);
         break;
     }
     this.name = "ValidatorError";
@@ -58,5 +61,12 @@ export class IncorrectLoginError extends Error {
   constructor() {
     super("Incorrect login");
     this.name = "IncorrectLoginError";
+  }
+}
+
+export class NotFoundError extends Error {
+  constructor() {
+    super("Not found");
+    this.name = "NotFoundError";
   }
 }

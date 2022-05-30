@@ -10,7 +10,23 @@ const LogSchema = new Schema({
   action: {
     type: String,
     required: true,
-    enum: ["create", "update", "delete"],
+    enum: [
+      "draft",
+      "request",
+      "cancel",
+      "approve",
+      "reject",
+      "delete",
+      "create",
+      "update",
+    ],
+    validate: {
+      validator: function (v) {
+        if (this.type !== "Quote") {
+          return ["create", "update", "delete"].includes(v);
+        }
+      },
+    },
   },
 
   user: {

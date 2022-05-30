@@ -1,6 +1,7 @@
 import jwt from "jsonwebtoken";
 import * as errors from "./errors.js";
 import User from "./models/user.js";
+import mongoose from "mongoose";
 
 export const asyncUtil = (fn) =>
   function asyncUtilWrap(req, res, next) {
@@ -18,10 +19,19 @@ export const errorHandler = (err, _req, res, _next) => {
     });
   } else if (err instanceof errors.IncorrectLoginError) {
     res.sendStatus(401);
+  } else if (err instanceof mongoose.Error.ValidationError) {
+    const first = err.errors[Object.keys(err.errors)[0]];
+    res.status(400).json({
+      message: first.message,
+      path: first.path,
+      kind: first.kind,
+    });
   } else if (err instanceof errors.ServerError) {
     res.status(500).json({
       message: err.message,
     });
+  } else if (err instanceof errors.NotFoundError) {
+    res.sendStatus(404);
   } else {
     res.sendStatus(500);
   }

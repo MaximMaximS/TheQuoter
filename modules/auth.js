@@ -1,10 +1,20 @@
-import mongoose from "mongoose";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "./models/user.js";
 import Log from "./models/log.js";
 import * as errors from "./errors.js";
 const saltRounds = 12;
+
+/*
+export function canAccess(user, quote) {
+  if (quote.state === "approved") {
+    return true;
+  }
+  const uploader = Log.findOne({
+
+  if (quote.)
+}
+*/
 
 export function getToken(user) {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -19,7 +29,10 @@ export function login(body) {
     }
     User.findOne(
       {
-        $or: [{ email: body.email }, { username: body.username }],
+        $or: [
+          { email: { $eq: body.email } },
+          { username: { $eq: body.username } },
+        ],
       },
       (err, user) => {
         if (err) {
@@ -44,7 +57,10 @@ export function login(body) {
 
 export function register(body) {
   return new Promise((resolve, reject) => {
-    const password = body.password;
+    const { username, password, email } = body;
+    if (typeof password !== "string") {
+      return reject(new errors.ValidatorError("password", "required"));
+    }
     // Check if password is 6 characters or more
     if (password.length < 6) {
       return reject(new errors.ValidatorError("password", "minlength"));
@@ -54,18 +70,13 @@ export function register(body) {
         return reject(new errors.ServerError(err));
       }
       const user = new User({
-        username: body.username,
+        username: username,
         hash,
-        email: body.email,
+        email: email,
       });
       user.save(function (err, res) {
         if (err) {
-          if (err instanceof mongoose.Error.ValidationError) {
-            return reject(
-              new errors.ValidatorError(err.errors[0].path, err.errors[0].kind)
-            );
-          }
-          return reject(new errors.ServerError(err));
+          return reject(err);
         }
         const log = new Log({
           type: "User",
