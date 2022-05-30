@@ -1,20 +1,8 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User from "./models/user.js";
-import Log from "./models/log.js";
 import * as errors from "./errors.js";
 const saltRounds = 12;
-
-/*
-export function canAccess(user, quote) {
-  if (quote.state === "approved") {
-    return true;
-  }
-  const uploader = Log.findOne({
-
-  if (quote.)
-}
-*/
 
 export function getToken(user) {
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
@@ -78,18 +66,7 @@ export function register(body) {
         if (err) {
           return reject(err);
         }
-        const log = new Log({
-          type: "User",
-          action: "create",
-          user: res._id,
-        });
-        log.save(function (err) {
-          if (err) {
-            user.remove();
-            return reject(new errors.ServerError(err));
-          }
-          resolve(user);
-        });
+        return resolve(res);
       });
     });
   });

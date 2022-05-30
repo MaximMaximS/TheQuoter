@@ -32,33 +32,49 @@ export const errorHandler = (err, _req, res, _next) => {
     });
   } else if (err instanceof errors.NotFoundError) {
     res.sendStatus(404);
+  } else if (err instanceof errors.ForbiddenError) {
+    res.sendStatus(403);
   } else {
     res.sendStatus(500);
   }
 };
 
-export const verifyToken = (req, res, next) => {
-  const authHeader = req.headers.authorization;
+export const setUser = (req, res, next) => {
+  const user = getUser(req.headers.authorization);
+  if (user instanceof Error) {
+    return next(user);
+  }
+  req.user = user;
+};
 
+export const enforceRole = (admin) => (req, res, next) => {
+  // Verify token
+  const user = getUser(req.headers.authorization);
+  if (user instanceof Error) {
+    return next(user);
+  }
+  // If admin false then enforce moderator or admin, otherwise enforce admin
+  (admin ? ["admin"] : ["admin", "moderator"]).includes(req.user.role)
+    ? next()
+    : next(new errors.ForbiddenError());
+};
+
+function getUser(authHeader) {
   if (authHeader) {
     const token = authHeader.split(" ")[1];
 
     jwt.verify(token, process.env.JWT_SECRET, (err, id) => {
       if (err) {
-        next();
-        // return next(new errors.IncorrectLoginError());
-      } else {
-        User.findById(id.id, (err, user) => {
-          if (err) {
-            return next(new errors.ServerError(err));
-          }
-          req.user = user;
-          next();
-        });
+        return err;
       }
+      User.findById(id.id, (err, user) => {
+        if (err) {
+          return err;
+        }
+        return user;
+      });
     });
   } else {
-    next();
-    // next(new errors.IncorrectLoginError());
+    return null;
   }
-};
+}

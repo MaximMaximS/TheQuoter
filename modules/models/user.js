@@ -1,13 +1,9 @@
 import mongoose from "mongoose";
-const { Schema, model } = mongoose;
+const { Schema, Types, model } = mongoose;
 import uniqueValidator from "mongoose-unique-validator";
 
 let UserSchema = new Schema(
   {
-    archived: {
-      type: Boolean,
-      default: false,
-    },
     username: {
       type: String,
       required: true,
@@ -30,13 +26,19 @@ let UserSchema = new Schema(
       match:
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     },
+    class: {
+      type: Types.ObjectId,
+      ref: "Class",
+      required: true,
+    },
     role: {
       type: String,
       required: true,
-      enum: ["admin", "user"],
+      enum: ["admin", "moderator", "user"],
       default: "user",
     },
-  }
+  },
+  { timestamps: true }
 );
 
 UserSchema.plugin(uniqueValidator);
