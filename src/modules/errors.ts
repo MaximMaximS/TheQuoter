@@ -1,24 +1,8 @@
-/*
-export class ValidationError extends Error {
-  constructor(array) {
-    const messages = [];
-    const paths = [];
-    array.forEach((element) => {
-      paths.push(element.path);
-      messages.push(`${element.path}: ${element.kind}`);
-    });
-    super(`Validation error: ${messages.join(", ")}`);
-    this.name = "ValidationError";
-    this.errors = array;
-  }
-}
-*/
-
 export class ValidatorError extends Error {
   name;
   kind;
   path;
-  constructor(path, kind) {
+  constructor(path: string, kind: string) {
     switch (kind) {
       case "notallowed":
         super("To use state 'pending' or 'rejected' you must be logged in.");
@@ -50,10 +34,16 @@ export class ValidatorError extends Error {
 }
 
 export class ServerError extends Error {
-  constructor(error) {
-    super(error.message || error);
+  full: Error;
+  constructor(error: Error | string) {
+    if (error instanceof Error) {
+      super(error.message);
+      this.full = error;
+    } else {
+      super(error);
+      this.full = new Error(error);
+    }
     this.name = "ServerError";
-    this.full = error || {};
   }
 }
 

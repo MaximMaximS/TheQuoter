@@ -4,12 +4,16 @@ import express from "express";
 import helmet from "helmet";
 import slowdown from "express-slow-down";
 import ratelimit from "express-rate-limit";
-import { errorHandler } from "./modules/middleware.js.js";
-import router from "./modules/router.js.js";
+import { errorHandler } from "./modules/middleware";
+import router from "./modules/router";
 
 main();
 
 async function main() {
+  if (process.env.MONGODB_URI === undefined) {
+    throw new Error("MONGODB_URI is not defined");
+  }
+
   await mongoose.connect(process.env.MONGODB_URI);
 
   const PORT = process.env.PORT || 3000;
@@ -39,7 +43,7 @@ async function main() {
 
   app.use(errorHandler);
 
-  app.use(function (_req, res) {
+  app.use(function (req, res) {
     res.sendStatus(404);
   });
 

@@ -1,16 +1,17 @@
 import jwt from "jsonwebtoken";
-import * as errors from "./errors.js";
-import User from "./models/user.js";
+import * as errors from "./errors";
+import User, { IUser } from "./models/user";
 import mongoose from "mongoose";
+import { NextFunction, Request, Response } from "express";
 
 export const asyncUtil = (fn) =>
-  function asyncUtilWrap(req, res, next) {
+  function asyncUtilWrap(req: Request, res: Response, next: NextFunction) {
     const fnReturn = fn(req, res, next);
     return Promise.resolve(fnReturn).catch(next);
   };
 
 // eslint-disable-next-line no-unused-vars
-export const errorHandler = (err, _req, res, _next) => {
+export const errorHandler = (err: Error, _req: Request, res: Response) => {
   if (err instanceof errors.ValidatorError) {
     res.status(400).json({
       message: err.message,
@@ -39,7 +40,7 @@ export const errorHandler = (err, _req, res, _next) => {
   }
 };
 
-export const setUser = (req, res, next) => {
+export const setUser = (req: Request, res: Response, next: NextFunction) => {
   const user = getUser(req.headers.authorization);
   if (user instanceof Error) {
     return next(user);
@@ -47,34 +48,28 @@ export const setUser = (req, res, next) => {
   req.user = user;
 };
 
-export const enforceRole = (admin) => (req, res, next) => {
-  // Verify token
-  const user = getUser(req.headers.authorization);
-  if (user instanceof Error) {
-    return next(user);
-  }
-  // If admin false then enforce moderator or admin, otherwise enforce admin
-  (admin ? ["admin"] : ["admin", "moderator"]).includes(req.user.role)
-    ? next()
-    : next(new errors.ForbiddenError());
-};
+export const enforceRole =
+  (admin: boolean) => (req: Request, res: Response, next: NextFunction) => {
+    // Verify token
+    const user = getUser(req.headers.authorization);
+    if (user instanceof Error) {
+      return next(user);
+    }
+    // If admin false then enforce moderator or admin, otherwise enforce admin
+    (admin ? ["admin"] : ["admin", "moderator"]).includes(req.user.role)
+      ? next()
+      : next(new errors.ForbiddenError());
+  };
 
-function getUser(authHeader) {
-  if (authHeader) {
+async function getUser(authHeader: string | undefined): Promise<IUser | null> {
+  if (authHeader !== undefined) {
     const token = authHeader.split(" ")[1];
-
-    jwt.verify(token, process.env.JWT_SECRET, (err, id) => {
-      if (err) {
-        return err;
-      }
-      User.findById(id.id, (err, user) => {
-        if (err) {
-          return err;
-        }
-        return user;
-      });
-    });
-  } else {
-    return null;
+    if (process.env.JWT_SECRET === undefined) {
+      console.log("JWT_SECRET is not defined");
+      process.exit(1);
+    }
+    const id = jwt.verify(token, process.env.JWT_SECRET);
+    return await User.findById(id);
   }
+  return null;
 }

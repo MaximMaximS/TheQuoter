@@ -1,8 +1,14 @@
-import mongoose from "mongoose";
+import { Schema, Types, model, Document } from "mongoose";
 import uniqueValidator from "mongoose-unique-validator";
-const { Schema, Types, model } = mongoose;
 
-const ClassSchema = new Schema(
+export interface IClass extends Document {
+  name: string;
+  createdBy: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const ClassSchema = new Schema<IClass>(
   {
     name: {
       type: String,
@@ -12,7 +18,7 @@ const ClassSchema = new Schema(
       unique: true,
     },
     createdBy: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },

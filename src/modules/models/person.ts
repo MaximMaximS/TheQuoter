@@ -1,8 +1,15 @@
-import mongoose from "mongoose";
+import { Schema, Types, model, Document } from "mongoose";
 import uniqueValidator from "mongoose-unique-validator";
-const { Schema, Types, model } = mongoose;
 
-const PersonSchema = new Schema(
+export interface IPerson extends Document{
+  name: string;
+  type: "teacher";
+  createdBy: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const PersonSchema = new Schema<IPerson>(
   {
     name: {
       type: String,
@@ -17,7 +24,7 @@ const PersonSchema = new Schema(
       enum: ["teacher" /*"student", "other"*/],
     },
     createdBy: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },

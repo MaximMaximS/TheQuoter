@@ -1,5 +1,4 @@
-import mongoose from "mongoose";
-const { Schema, Types, model } = mongoose;
+import { Schema, Types, model, Document } from "mongoose";
 
 /*
 const CommentSchema = new Schema({
@@ -24,7 +23,19 @@ const CommentSchema = new Schema({
 });
 */
 
-const QuoteSchema = new Schema(
+export interface IQuote extends Document {
+  state: "draft" | "pending" | "approved" | "rejected";
+  context?: string;
+  text: string;
+  note?: string;
+  originator: Types.ObjectId;
+  class: Types.ObjectId;
+  createdBy: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const QuoteSchema = new Schema<IQuote>(
   {
     state: {
       type: String,
@@ -48,17 +59,17 @@ const QuoteSchema = new Schema(
       trim: true,
     },
     originator: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Person",
       required: true,
     },
     class: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "Class",
     },
     // comments: [CommentSchema],
     createdBy: {
-      type: Types.ObjectId,
+      type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
