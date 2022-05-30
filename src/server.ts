@@ -4,8 +4,8 @@ import express from "express";
 import helmet from "helmet";
 import slowdown from "express-slow-down";
 import ratelimit from "express-rate-limit";
-import { errorHandler } from "./modules/middleware.js";
-import router from "./modules/router.js";
+import { errorHandler } from "./modules/middleware.js.js";
+import router from "./modules/router.js.js";
 
 main();
 
