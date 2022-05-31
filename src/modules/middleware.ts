@@ -2,10 +2,10 @@ import jwt from "jsonwebtoken";
 import * as errors from "./errors";
 import User, { IUser } from "./models/user";
 import mongoose from "mongoose";
-import { NextFunction, Request, Response } from "express";
+import { ErrorRequestHandler, NextFunction, Request, Response } from "express";
 
-// eslint-disable-next-line no-unused-vars
-export const errorHandler = (err: Error, _req: Request, res: Response) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   if (err instanceof errors.ValidatorError) {
     res.status(400).json({
       message: err.message,
@@ -71,7 +71,11 @@ async function getUser(authHeader: string | undefined): Promise<IUser | null> {
       process.exit(1);
     }
     const id = jwt.verify(token, process.env.JWT_SECRET);
-    return await User.findById(id);
+    // If id is string
+    if (typeof id === "string") {
+      return null;
+    }
+    return await User.findById(id.id);
   }
   return null;
 }

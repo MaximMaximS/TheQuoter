@@ -8,7 +8,7 @@ export function getToken(user: IUser) {
   if (process.env.JWT_SECRET === undefined) {
     throw new Error("JWT_SECRET is undefined");
   }
-  return jwt.sign(user._id, process.env.JWT_SECRET, {
+  return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "1d",
   });
 }
