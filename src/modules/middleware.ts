@@ -4,12 +4,6 @@ import User, { IUser } from "./models/user";
 import mongoose from "mongoose";
 import { NextFunction, Request, Response } from "express";
 
-export const asyncUtil = (fn) =>
-  function asyncUtilWrap(req: Request, res: Response, next: NextFunction) {
-    const fnReturn = fn(req, res, next);
-    return Promise.resolve(fnReturn).catch(next);
-  };
-
 // eslint-disable-next-line no-unused-vars
 export const errorHandler = (err: Error, _req: Request, res: Response) => {
   if (err instanceof errors.ValidatorError) {
@@ -40,8 +34,12 @@ export const errorHandler = (err: Error, _req: Request, res: Response) => {
   }
 };
 
-export const setUser = (req: Request, res: Response, next: NextFunction) => {
-  const user = getUser(req.headers.authorization);
+export const setUser = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  const user = await getUser(req.headers.authorization);
   if (user instanceof Error) {
     return next(user);
   }
@@ -49,14 +47,18 @@ export const setUser = (req: Request, res: Response, next: NextFunction) => {
 };
 
 export const enforceRole =
-  (admin: boolean) => (req: Request, res: Response, next: NextFunction) => {
+  (admin: boolean) =>
+  async (req: Request, res: Response, next: NextFunction) => {
     // Verify token
-    const user = getUser(req.headers.authorization);
+    const user = await getUser(req.headers.authorization);
     if (user instanceof Error) {
       return next(user);
     }
     // If admin false then enforce moderator or admin, otherwise enforce admin
-    (admin ? ["admin"] : ["admin", "moderator"]).includes(req.user.role)
+    if (user === null) {
+      return next(new errors.IncorrectLoginError());
+    }
+    (admin ? ["admin"] : ["admin", "moderator"]).includes(user.role)
       ? next()
       : next(new errors.ForbiddenError());
   };

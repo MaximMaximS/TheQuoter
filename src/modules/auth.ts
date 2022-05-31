@@ -13,7 +13,12 @@ export function getToken(user: IUser) {
   });
 }
 
-export async function login(body): Promise<IUser> {
+export interface ILoginBody {
+  email?: string;
+  username?: string;
+  password: string;
+}
+export async function login(body: ILoginBody): Promise<IUser> {
   if ((!body.email && !body.username) || !body.password) {
     throw new errors.IncorrectLoginError();
   }
@@ -30,7 +35,13 @@ export async function login(body): Promise<IUser> {
   return user;
 }
 
-export async function register(body): Promise<IUser> {
+export interface IRegisterBody {
+  email: string;
+  username: string;
+  password: string;
+}
+
+export async function register(body: IRegisterBody): Promise<IUser> {
   const { username, password, email } = body;
   if (typeof password !== "string") {
     throw new errors.ValidatorError("password", "required");
