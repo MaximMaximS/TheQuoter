@@ -1,27 +1,17 @@
 import { Schema, Types, model, Document } from "mongoose";
+import { IReducedClass } from "./class";
+import { IReducedPerson } from "./person";
+import idValidator from "mongoose-id-validator";
 
-/*
-const CommentSchema = new Schema({
-  archived: {
-    type: Boolean,
-    default: false,
-  },
-  text: {
-    type: String,
-    maxlength: 500,
-    required: true,
-  },
-  author: {
-    type: Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-  likes: {
-    type: Number,
-    default: 0,
-  },
-});
-*/
+export interface IReducedQuote {
+  _id: Types.ObjectId;
+  context?: string;
+  text: string;
+  note?: string;
+  originator: IReducedPerson;
+  class?: IReducedClass;
+  state?: string;
+}
 
 export interface IQuote extends Document {
   state: "draft" | "pending" | "approved" | "rejected";
@@ -33,6 +23,9 @@ export interface IQuote extends Document {
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+
+  // Instance methods
+  reduce(): IReducedQuote;
 }
 
 const QuoteSchema = new Schema<IQuote>(
@@ -67,7 +60,6 @@ const QuoteSchema = new Schema<IQuote>(
       type: Schema.Types.ObjectId,
       ref: "Class",
     },
-    // comments: [CommentSchema],
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
@@ -78,5 +70,21 @@ const QuoteSchema = new Schema<IQuote>(
     timestamps: true,
   }
 );
+
+QuoteSchema.plugin(idValidator);
+
+QuoteSchema.methods.reduce = function (keepState = false): IReducedQuote {
+  this.populate("originator").populate("class");
+  // Keep only id, context, text, note, originator, class, and optionally state
+  return {
+    _id: this._id,
+    context: this.context,
+    text: this.text,
+    note: this.note,
+    originator: this.originator.reduce(),
+    class: this.class.reduce(),
+    state: keepState ? this.state : undefined,
+  };
+};
 
 export default model("Quote", QuoteSchema, "quotes");

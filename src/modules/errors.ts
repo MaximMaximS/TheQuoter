@@ -1,31 +1,30 @@
+export function genValidatorMessage(path: string, kind: string) {
+  switch (kind) {
+    case "notallowed":
+      return "To use state 'pending' or 'rejected' you must be logged in.";
+    case "required":
+      return `${path} is required`;
+    case "maxlength":
+      return `${path} is too long`;
+    case "minlength":
+      return `${path} is too short`;
+    case "unique":
+      return `${path} is already taken`;
+    case "match":
+      return `${path} does not match the pattern`;
+    case "ObjectId":
+      return `${path} is not a valid ObjectId`;
+    default:
+      return `${path} is not valid (${kind})`;
+  }
+}
+
 export class ValidatorError extends Error {
   name;
   kind;
   path;
   constructor(path: string, kind: string) {
-    switch (kind) {
-      case "notallowed":
-        super("To use state 'pending' or 'rejected' you must be logged in.");
-        break;
-      case "required":
-        super(`${path} is required`);
-        break;
-      case "maxlength":
-        super(`${path} is too long`);
-        break;
-      case "minlength":
-        super(`${path} is too short`);
-        break;
-      case "unique":
-        super(`${path} is already taken`);
-        break;
-      case "match":
-        super(`${path} does not match the pattern`);
-        break;
-      default:
-        super(`${path} is not valid (${kind})`);
-        break;
-    }
+    super(genValidatorMessage(path, kind));
     this.name = "ValidatorError";
 
     this.kind = kind;

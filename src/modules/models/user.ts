@@ -1,5 +1,6 @@
 import { Schema, Types, model, Document } from "mongoose";
 import uniqueValidator from "mongoose-unique-validator";
+import idValidator from "mongoose-id-validator";
 
 export interface IUser extends Document {
   username: string;
@@ -35,21 +36,22 @@ const UserSchema = new Schema<IUser>(
       match:
         /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
     },
-    class: {
-      type: Schema.Types.ObjectId,
-      ref: "Class",
-      required: true,
-    },
     role: {
       type: String,
       required: true,
       enum: ["admin", "moderator", "user"],
       default: "user",
     },
+    class: {
+      type: Schema.Types.ObjectId,
+      ref: "Class",
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
 UserSchema.plugin(uniqueValidator);
+UserSchema.plugin(idValidator);
 
 export default model("User", UserSchema, "users");

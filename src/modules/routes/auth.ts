@@ -1,7 +1,7 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import User, { IUser } from "./models/user";
-import * as errors from "./errors";
+import User, { IUser } from "../models/user";
+import * as errors from "../errors";
 const saltRounds = 12;
 
 export function getToken(user: IUser) {
@@ -16,7 +16,7 @@ export function getToken(user: IUser) {
 export interface ILoginBody {
   email?: string;
   username?: string;
-  password: string;
+  password?: string;
 }
 export async function login(body: ILoginBody): Promise<IUser> {
   if ((!body.email && !body.username) || !body.password) {
@@ -36,13 +36,14 @@ export async function login(body: ILoginBody): Promise<IUser> {
 }
 
 export interface IRegisterBody {
-  email: string;
-  username: string;
-  password: string;
+  email?: string;
+  username?: string;
+  password?: string;
+  class?: string;
 }
 
 export async function register(body: IRegisterBody): Promise<IUser> {
-  const { username, password, email } = body;
+  const { password } = body;
   if (typeof password !== "string") {
     throw new errors.ValidatorError("password", "required");
   }
@@ -52,9 +53,10 @@ export async function register(body: IRegisterBody): Promise<IUser> {
   }
   const hash = await bcrypt.hash(password, saltRounds);
   const user = await User.create({
-    username: username,
+    username: body.username,
     hash,
-    email: email,
+    email: body.email,
+    class: body.class,
   });
   return user;
 }
