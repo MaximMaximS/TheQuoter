@@ -10,7 +10,7 @@ export interface IReducedPerson {
 
 export interface IPerson extends Document {
   name: string;
-  type: "teacher";
+  type: "teacher" | "student" | "other";
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -31,7 +31,7 @@ const PersonSchema = new Schema<IPerson>(
     type: {
       type: String,
       required: true,
-      enum: ["teacher" /*"student", "other"*/],
+      enum: ["teacher", "student", "other"],
     },
     createdBy: {
       type: Schema.Types.ObjectId,

@@ -6,8 +6,8 @@ export interface IUser extends Document {
   username: string;
   hash: string;
   email: string;
-  class: Types.ObjectId;
   role: "admin" | "moderator" | "user";
+  class: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }

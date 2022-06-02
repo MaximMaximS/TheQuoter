@@ -1,7 +1,7 @@
 import { FilterQuery } from "mongoose";
 import Class, { IClass } from "../models/class";
 import { IUser } from "../models/user";
-import { ValidatorError } from "../errors";
+import { IncorrectLoginError, ValidatorError } from "../errors";
 
 export async function search(name: unknown) {
   const query: FilterQuery<IClass> = {};
@@ -12,7 +12,10 @@ export async function search(name: unknown) {
   return classes.map((c) => c.reduce());
 }
 
-export async function create(name: unknown, user: IUser) {
+export async function create(name: unknown, user: IUser | null) {
+  if (user === null) {
+    throw new IncorrectLoginError();
+  }
   if (typeof name !== "string") {
     throw new ValidatorError("name", "required");
   }

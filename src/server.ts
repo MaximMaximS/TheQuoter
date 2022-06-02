@@ -4,7 +4,7 @@ import express from "express";
 import helmet from "helmet";
 import slowdown from "express-slow-down";
 import ratelimit from "express-rate-limit";
-import { errorHandler } from "./modules/middleware";
+import { errorHandler, notFound } from "./modules/middleware";
 import router from "./modules/router";
 
 main();
@@ -43,9 +43,7 @@ async function main() {
 
   app.use(errorHandler);
 
-  app.use(function (req, res) {
-    res.sendStatus(404);
-  });
+  app.use(notFound);
 
   app.listen(PORT, async () => {
     console.log(`Server running on http://localhost:${PORT}`);

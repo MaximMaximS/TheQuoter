@@ -1,52 +1,79 @@
 import express, { Request, Response } from "express";
 import asyncMiddleware from "middleware-async";
-import * as auth from "./routes/auth";
+import * as users from "./routes/users";
 import * as classes from "./routes/classes";
-import { enforceRole } from "./middleware";
+import * as people from "./routes/people";
+import { enforceRole, methodNotAllowed } from "./middleware";
 import { extractFromUnknownObject } from "./utils";
 
 const router = express.Router();
 
-// Auth
-router.post(
-  "/auth/login",
-  asyncMiddleware(async (req: Request, res: Response) => {
-    const user = await auth.login(req.body);
-    const token = auth.getToken(user);
-    res.json({
-      token,
-    });
-  })
-);
+router
+  .route("/users")
+  .post(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const user = await users.register(req.body);
+      const token = users.getToken(user);
+      res.status(201).json({
+        token,
+      });
+    })
+  )
+  .all(methodNotAllowed);
 
-router.post(
-  "/auth/register",
-  asyncMiddleware(async (req: Request, res: Response) => {
-    const user = await auth.register(req.body);
-    const token = auth.getToken(user);
-    res.status(201).json({
-      token,
-    });
-  })
-);
+// Users
+router
+  .route("/users/login")
+  .post(
+    asyncMiddleware(async (req: Request, res: Response) => {
+      const user = await users.login(req.body);
+      const token = users.getToken(user);
+      res.json({
+        token,
+      });
+    })
+  )
+  .all(methodNotAllowed);
 
 // Classes
-router.get(
-  "/classes",
-  asyncMiddleware(async (req, res) => {
-    const classesFound = await classes.search(extractFromUnknownObject(req.query, "name"));
-    res.json({ classesFound });
-  })
-);
+router
+  .route("/classes")
+  .get(
+    asyncMiddleware(async (req, res) => {
+      const classesFound = await classes.search(
+        extractFromUnknownObject(req.query, "name")
+      );
+      res.json({ classesFound });
+    })
+  )
+  .post(
+    asyncMiddleware(enforceRole("admin")),
+    asyncMiddleware(async (req, res) => {
+      const classCreated = await classes.create(req.body.name, req.user);
+      res.status(201).json(classCreated);
+    })
+  )
+  .all(methodNotAllowed);
 
-router.post(
-  "/classes",
-  asyncMiddleware(enforceRole("admin")),
-  asyncMiddleware(async (req, res) => {
-    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
-    const classCreated = await classes.create(req.body.name, req.user!);
-    res.status(201).json(classCreated);
-  })
-);
+// People
+router
+  .route("/people")
+  .get(
+    asyncMiddleware(async (req, res) => {
+      const peopleFound = await people.search(
+        extractFromUnknownObject(req.query, "name"),
+        extractFromUnknownObject(req.query, "type")
+      );
+      res.json({ peopleFound });
+    })
+  )
+  .post(
+    asyncMiddleware(enforceRole("admin")),
+    asyncMiddleware(async (req, res) => {
+      const classCreated = await classes.create(req.body.name, req.user);
+      res.status(201).json(classCreated);
+    })
+  )
+  .all(methodNotAllowed);
 
 export default router;

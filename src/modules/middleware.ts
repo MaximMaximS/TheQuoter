@@ -17,6 +17,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
   } else if (err instanceof TokenExpiredError) {
     res.sendStatus(401);
   } else if (err instanceof mongoose.Error.ValidationError) {
+    console.log(err);
     const first = err.errors[Object.keys(err.errors)[0]];
     res.status(400).json({
       message: errors.genValidatorMessage(first.path, first.kind),
@@ -95,4 +96,12 @@ async function getUser(authHeader: string | undefined): Promise<IUser | null> {
     return await User.findById(id.id);
   }
   return null;
+}
+
+export function notFound(req: Request, res: Response) {
+  res.sendStatus(404);
+}
+
+export function methodNotAllowed(req: Request, res: Response) {
+  res.sendStatus(405);
 }
