@@ -70,8 +70,8 @@ router
   .post(
     asyncMiddleware(enforceRole("admin")),
     asyncMiddleware(async (req, res) => {
-      const classCreated = await classes.create(req.body.name, req.user);
-      res.status(201).json(classCreated);
+      const personCreated = await people.create(req.body.name, req.body.type, req.user);
+      res.status(201).json(personCreated);
     })
   )
   .all(methodNotAllowed);

@@ -1,7 +1,7 @@
 import { FilterQuery } from "mongoose";
 import Person, { IPerson } from "../models/person";
 import { IUser } from "../models/user";
-import { ValidatorError } from "../errors";
+import { IncorrectLoginError, ValidatorError } from "../errors";
 
 export async function search(name: unknown, type: unknown) {
   const query: FilterQuery<IPerson> = {};
@@ -15,7 +15,10 @@ export async function search(name: unknown, type: unknown) {
   return people.map((p) => p.reduce());
 }
 
-export async function create(name: unknown, type: unknown, user: IUser) {
+export async function create(name: unknown, type: unknown, user: IUser | null) {
+  if (user === null) {
+    throw new IncorrectLoginError();
+  }
   if (typeof name !== "string") {
     throw new ValidatorError("name", "required");
   }

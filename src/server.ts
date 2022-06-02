@@ -39,10 +39,13 @@ async function main() {
     })
   );
 
+  // Routes
   app.use(router);
 
+  // Error handling
   app.use(errorHandler);
 
+  // Send plain text 404 for all other routes
   app.use(notFound);
 
   app.listen(PORT, async () => {
