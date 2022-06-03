@@ -20,27 +20,24 @@ export function genValidatorMessage(path: string, kind: string) {
 }
 
 export class ValidatorError extends Error {
-  name;
   kind;
   path;
   constructor(path: string, kind: string) {
     super(genValidatorMessage(path, kind));
     this.name = "ValidatorError";
-
     this.kind = kind;
     this.path = path;
   }
 }
 
 export class ServerError extends Error {
-  full: Error;
+  full?: Error;
   constructor(error: Error | string) {
     if (error instanceof Error) {
       super(error.message);
       this.full = error;
     } else {
       super(error);
-      this.full = new Error(error);
     }
     this.name = "ServerError";
   }

@@ -20,22 +20,25 @@ async function main() {
 
   const app = express();
 
+  // Security headers
   app.use(helmet());
   app.use(express.json());
   app.use(express.urlencoded({ extended: true }));
 
+  // Slowdown every request after 100 requests in 5 minutes
   app.use(
     slowdown({
-      windowMs: 5 * 60 * 1000, // 15 minutes
-      delayAfter: 50,
+      windowMs: 5 * 60 * 1000,
+      delayAfter: 100,
       delayMs: 500,
     })
   );
 
+  // Ignore all requests after 200 requests in 5 minutes
   app.use(
     ratelimit({
-      windowMs: 5 * 60 * 1000, // 15 minutes
-      max: 100,
+      windowMs: 5 * 60 * 1000,
+      max: 200,
     })
   );
 

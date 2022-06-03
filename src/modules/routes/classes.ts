@@ -9,6 +9,7 @@ export async function search(name: unknown) {
     query["name"] = { $regex: name, $options: "i" };
   }
   const classes = await Class.find(query);
+  // Simplify all classes
   return classes.map((c) => c.reduce());
 }
 
