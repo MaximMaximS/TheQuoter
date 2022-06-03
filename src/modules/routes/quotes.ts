@@ -24,9 +24,11 @@ export async function search(
   }
   const quotes = await Quote.find(query);
 
+  // Simplify all quotes
   return Promise.all(quotes.map((q) => q.reduce()));
 }
 
+// TODO Not Implemented
 export async function create(name: unknown, user: IUser | null) {
   if (user === null) {
     throw new IncorrectLoginError();

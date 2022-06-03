@@ -4,6 +4,7 @@ import User, { IUser } from "../models/user";
 import * as errors from "../errors";
 const saltRounds = 12;
 
+// Generate a JWT for the user
 export function getToken(user: IUser) {
   if (process.env.JWT_SECRET === undefined) {
     throw new Error("JWT_SECRET is undefined");
@@ -18,7 +19,9 @@ export interface ILoginBody {
   username?: string;
   password?: string;
 }
+
 export async function login(body: ILoginBody): Promise<IUser> {
+  // Check if <email or username> and <password> is provided
   if ((!body.email && !body.username) || !body.password) {
     throw new errors.IncorrectLoginError();
   }
@@ -28,6 +31,7 @@ export async function login(body: ILoginBody): Promise<IUser> {
   if (user === null) {
     throw new errors.IncorrectLoginError();
   }
+  // Verify password
   const result = await bcrypt.compare(body.password, user.hash);
   if (!result) {
     throw new errors.IncorrectLoginError();
@@ -47,11 +51,12 @@ export async function register(body: IRegisterBody): Promise<IUser> {
   if (typeof password !== "string") {
     throw new errors.ValidatorError("password", "required");
   }
-  // Check if password is 6 characters or more
   if (password.length < 6) {
     throw new errors.ValidatorError("password", "minlength");
   }
+  // Hash password
   const hash = await bcrypt.hash(password, saltRounds);
+  // Create user
   const user = await User.create({
     username: body.username,
     hash,
