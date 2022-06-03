@@ -1,23 +1,25 @@
-import "dotenv/config";
-import mongoose from "mongoose";
-import express from "express";
-import helmet from "helmet";
-import slowdown from "express-slow-down";
+import "dotenv/config"; // Enviroment init
+import mongoose from "mongoose"; // DB
+import express from "express"; // Webserver
+import slowdown from "express-slow-down"; // WS utils
 import ratelimit from "express-rate-limit";
+import helmet from "helmet";
 import { errorHandler, notFound } from "./modules/middleware";
 import router from "./modules/router";
 
-main();
+main(); // Entry point
 
 async function main() {
+  // No args - all arg passes with ENViroment
   if (process.env.MONGODB_URI === undefined) {
     throw new Error("MONGODB_URI is not defined");
   }
 
   await mongoose.connect(process.env.MONGODB_URI);
 
-  const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3000; // If no port is supplied, run on 3000
 
+  // New Express webserver instance
   const app = express();
 
   // Security headers
@@ -51,7 +53,8 @@ async function main() {
   // Send plain text 404 for all other routes
   app.use(notFound);
 
+  // Run the server
   app.listen(PORT, async () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+    console.info(`Server running on http://localhost:${PORT}`);
   });
 }
