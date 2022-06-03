@@ -1,4 +1,8 @@
-import jwt, { TokenExpiredError } from "jsonwebtoken";
+import jwt, {
+  JsonWebTokenError,
+  NotBeforeError,
+  TokenExpiredError,
+} from "jsonwebtoken";
 import * as errors from "./errors";
 import User, { IUser } from "./models/user";
 import mongoose from "mongoose";
@@ -12,9 +16,12 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
       path: err.path,
       kind: err.kind,
     });
-  } else if (err instanceof errors.IncorrectLoginError) {
-    res.sendStatus(401);
-  } else if (err instanceof TokenExpiredError) {
+  } else if (
+    err instanceof errors.IncorrectLoginError ||
+    err instanceof TokenExpiredError ||
+    err instanceof NotBeforeError ||
+    err instanceof JsonWebTokenError
+  ) {
     res.sendStatus(401);
   } else if (err instanceof mongoose.Error.ValidationError) {
     // console.log(err);

@@ -1,4 +1,4 @@
-export function extractFromUnknownObject(obj: unknown, key: string) {
+export function extractFromUnknownObject(obj: unknown, key: string): unknown {
   if (isObject(obj)) {
     return obj[key as keyof typeof obj];
   }

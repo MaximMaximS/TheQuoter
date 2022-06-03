@@ -1,7 +1,8 @@
 import { Schema, Types, model, Document } from "mongoose";
-import { IReducedClass } from "./class";
-import { IReducedPerson } from "./person";
+import Class, { IReducedClass } from "./class";
+import Person, { IReducedPerson } from "./person";
 import idValidator from "mongoose-id-validator";
+import { ServerError } from "../errors";
 
 export interface IReducedQuote {
   _id: Types.ObjectId;
@@ -25,7 +26,7 @@ export interface IQuote extends Document {
   updatedAt: Date;
 
   // Instance methods
-  reduce(): IReducedQuote;
+  reduce(): Promise<IReducedQuote>;
 }
 
 const QuoteSchema = new Schema<IQuote>(
@@ -73,18 +74,28 @@ const QuoteSchema = new Schema<IQuote>(
 
 QuoteSchema.plugin(idValidator);
 
-QuoteSchema.methods.reduce = function (keepState = false): IReducedQuote {
-  this.populate("originator").populate("class");
+QuoteSchema.methods.reduce = async function (
+  keepState = false
+): Promise<IReducedQuote> {
   // Keep only id, context, text, note, originator, class, and optionally state
-  return {
+  const classDoc = await Class.findById(this.class);
+  const originatorDoc = await Person.findById(this.originator);
+  if (originatorDoc === null) {
+    throw new ServerError("Not found");
+  }
+  const doc = {
     _id: this._id,
     context: this.context,
     text: this.text,
     note: this.note,
-    originator: this.originator.reduce(),
-    class: this.class.reduce(),
-    state: keepState ? this.state : undefined,
+    originator: originatorDoc.reduce(),
+    class: classDoc !== null ? classDoc.reduce() : undefined,
+    state: this.state,
   };
+  if (!keepState) {
+    delete doc.state;
+  }
+  return doc;
 };
 
 export default model("Quote", QuoteSchema, "quotes");
