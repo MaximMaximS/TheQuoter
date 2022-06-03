@@ -1,16 +1,17 @@
 import express, { Request, Response } from "express";
 import asyncMiddleware from "middleware-async";
+import { enforceRole, methodNotAllowed } from "./middleware";
+import { extractFromUnknownObject } from "./utils";
 import * as users from "./routes/users";
 import * as classes from "./routes/classes";
 import * as people from "./routes/people";
 import * as quotes from "./routes/quotes";
-import { enforceRole, methodNotAllowed } from "./middleware";
-import { extractFromUnknownObject } from "./utils";
 import { IncorrectLoginError, ServerError } from "./errors";
 import { Types } from "mongoose";
 
 const router = express.Router();
 
+// Users Register
 router
   .route("/users")
   .post(
@@ -24,7 +25,7 @@ router
   )
   .all(methodNotAllowed);
 
-// Users
+// Users Login
 router
   .route("/users/login")
   .post(
@@ -62,6 +63,7 @@ router
 router
   .route("/people")
   .get(
+    // Query people
     asyncMiddleware(async (req, res) => {
       const peopleFound = await people.search(
         extractFromUnknownObject(req.query, "name"),
@@ -71,6 +73,7 @@ router
     })
   )
   .post(
+    // New person
     asyncMiddleware(enforceRole("admin")),
     asyncMiddleware(async (req, res) => {
       const personCreated = await people.create(
@@ -87,6 +90,7 @@ router
 router
   .route("/quotes")
   .get(
+    // Query
     asyncMiddleware(enforceRole("user")),
     asyncMiddleware(async (req, res) => {
       let state = req.query.state;
@@ -98,7 +102,7 @@ router
           if (req.user === null) {
             throw new ServerError("This should never happen");
           }
-          // TODO Permissions
+          // TODO: Permissions
           throw new IncorrectLoginError();
         }
       }
@@ -118,7 +122,8 @@ router
         text,
         state
       );
-      res.json({ quotes: quotesFound });
+
+      res.json({ quotes: quotesFound }); // Send the found enteries
     })
   )
   .all(methodNotAllowed);
