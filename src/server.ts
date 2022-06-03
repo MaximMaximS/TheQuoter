@@ -4,12 +4,16 @@ import express from "express";
 import helmet from "helmet";
 import slowdown from "express-slow-down";
 import ratelimit from "express-rate-limit";
-import { errorHandler } from "./modules/middleware.js";
-import router from "./modules/router.js";
+import { errorHandler, notFound } from "./modules/middleware";
+import router from "./modules/router";
 
 main();
 
 async function main() {
+  if (process.env.MONGODB_URI === undefined) {
+    throw new Error("MONGODB_URI is not defined");
+  }
+
   await mongoose.connect(process.env.MONGODB_URI);
 
   const PORT = process.env.PORT || 3000;
@@ -35,13 +39,14 @@ async function main() {
     })
   );
 
+  // Routes
   app.use(router);
 
+  // Error handling
   app.use(errorHandler);
 
-  app.use(function (_req, res) {
-    res.sendStatus(404);
-  });
+  // Send plain text 404 for all other routes
+  app.use(notFound);
 
   app.listen(PORT, async () => {
     console.log(`Server running on http://localhost:${PORT}`);

@@ -1,13 +1,19 @@
-import mongoose from "mongoose";
-const { Schema, model } = mongoose;
+import { Schema, Types, model, Document } from "mongoose";
 import uniqueValidator from "mongoose-unique-validator";
+import idValidator from "mongoose-id-validator";
 
-let UserSchema = new Schema(
+export interface IUser extends Document {
+  username: string;
+  hash: string;
+  email: string;
+  role: "admin" | "moderator" | "user";
+  class: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+const UserSchema = new Schema<IUser>(
   {
-    archived: {
-      type: Boolean,
-      default: false,
-    },
     username: {
       type: String,
       required: true,
@@ -33,12 +39,19 @@ let UserSchema = new Schema(
     role: {
       type: String,
       required: true,
-      enum: ["admin", "user"],
+      enum: ["admin", "moderator", "user"],
       default: "user",
     },
-  }
+    class: {
+      type: Schema.Types.ObjectId,
+      ref: "Class",
+      required: true,
+    },
+  },
+  { timestamps: true }
 );
 
 UserSchema.plugin(uniqueValidator);
+UserSchema.plugin(idValidator);
 
 export default model("User", UserSchema, "users");
