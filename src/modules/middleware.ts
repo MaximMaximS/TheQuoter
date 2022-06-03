@@ -105,4 +105,5 @@ export function notFound(req: Request, res: Response) {
 
 export function methodNotAllowed(req: Request, res: Response) {
   res.sendStatus(405);
+  console.log("Not allowed API call...");
 }
