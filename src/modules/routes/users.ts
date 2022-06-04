@@ -54,8 +54,10 @@ export async function register(body: IRegisterBody): Promise<IUser> {
   if (password.length < 6) {
     throw new errors.ValidatorError("password", "minlength");
   }
+
   // Hash password
   const hash = await bcrypt.hash(password, saltRounds);
+
   // Create user
   const user = await User.create({
     username: body.username,

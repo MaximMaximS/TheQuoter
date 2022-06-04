@@ -81,7 +81,9 @@ export const enforceRole =
   };
 
 // Get user from authorization header
-async function getUser(authHeader: string | undefined): Promise<IUser | null> {
+export async function getUser(
+  authHeader: string | undefined
+): Promise<IUser | null> {
   if (authHeader !== undefined) {
     // Slice off Bearer prefix
     const token = authHeader.split(" ")[1];

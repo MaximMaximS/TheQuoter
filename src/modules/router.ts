@@ -1,6 +1,6 @@
 import express, { Request, Response } from "express";
 import asyncMiddleware from "middleware-async";
-import { enforceRole, methodNotAllowed } from "./middleware";
+import { enforceRole, getUser, methodNotAllowed } from "./middleware";
 import { extractFromUnknownObject } from "./utils";
 import * as users from "./routes/users";
 import * as classes from "./routes/classes";
@@ -53,7 +53,10 @@ router
   .post(
     asyncMiddleware(enforceRole("admin")),
     asyncMiddleware(async (req, res) => {
-      const classCreated = await classes.create(req.body.name, req.user);
+      const classCreated = await classes.create(
+        req.body.name,
+        await getUser(req.headers.authorization)
+      );
       res.status(201).json(classCreated);
     })
   )
