@@ -92,6 +92,38 @@
                     }
                 }
             }
+        },
+        "/classes": {
+            "post": {
+                "tags": [
+                    "classes"
+                ],
+                "summary": "Lists all classes",
+                "description": "Classes Query",
+                "requestBody":{
+                    "content": {
+                        "aplicatin/json":{
+                            "schema": {
+                                "$ref": "#/components/schemas/Token "
+                            }
+                        }
+                    },
+                    "description": "Queried registered classes",
+                    "required": true
+                },
+                "responses": {
+                    "200": {
+                        "description": "Success",
+                        "content":{
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Class"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     },
     "servers": [
@@ -100,22 +132,6 @@
         }
     ],
     "components": {
-        "requestBodies": {
-            "UserArray": {
-                "content": {
-                    "application/json": {
-                        "schema": {
-                            "type": "array",
-                            "items": {
-                                "$ref": "#/components/schemas/User"
-                            }
-                        }
-                    }
-                },
-                "description": "List of user object",
-                "required": true
-            }
-        },
         "schemas": {
             "UserRegisterBody": {
                 "type": "object",
