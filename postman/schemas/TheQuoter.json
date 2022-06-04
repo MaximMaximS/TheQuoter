@@ -102,7 +102,7 @@
                 "description": "Classes Query",
                 "requestBody":{
                     "content": {
-                        "aplicatin/json":{
+                        "application/json":{
                             "schema": {
                                 "$ref": "#/components/schemas/Token "
                             }
