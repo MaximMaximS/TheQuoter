@@ -94,25 +94,57 @@
             }
         },
         "/classes": {
-            "post": {
+            "get":{
                 "tags": [
                     "classes"
                 ],
-                "summary": "Lists all classes",
-                "description": "Classes Query",
+                "summary": "Retrieve classes by key",
+                "description": "Get class",
+                "operationId": "getClass",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties":{
+                                    "query": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json":{
+                                "schema": {
+                                    "$ref": "#/components/schemas/Class"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": ["classes"],
+                "summary": "Create a class",
+                "description": "Create a class (ADMIN)",
+                "operationId": "pushClass",
                 "requestBody":{
                     "content": {
                         "application/json":{
                             "schema": {
-                                "$ref": "#/components/schemas/Token "
+                                "$ref": "#/components/schemas/CreateClassBody"
                             }
                         }
                     },
-                    "description": "Queried registered classes",
                     "required": true
                 },
                 "responses": {
-                    "200": {
+                    "201": {
                         "description": "Success",
                         "content":{
                             "application/json": {
@@ -124,6 +156,55 @@
                     }
                 }
             }
+        },
+        "/people": {
+            "get": {
+                "tags": ["people"],
+                "summary": "Query people",
+                "description": "Get people by type or name",
+                "operationId": "getPeople",
+                "requestBody":{
+                    "content": {
+                        "application/json": {
+                            "schema":{
+                                "type": "object",
+                                "$ref": "#/components/schemas/Token",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "type": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/Person"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                // TODO: Add the people creation request
+            }
+        },
+        "/quotes": {
+            "get": {
+                // TODO: Add the people creation request
+            },
+            "post": {
+                // TODO: Add the people creation request
+            }
         }
     },
     "servers": [
@@ -133,30 +214,44 @@
     ],
     "components": {
         "schemas": {
+            "CreateClassBody": {
+                "type": "object",
+                "properties": {
+                    "$ref": "#/components/schemas/Token",
+                    "name": "string"
+                }  
+            },
             "UserRegisterBody": {
                 "type": "object",
                 "properties": {
                     "username": {
-                        "type": "string"
+                        "type": "string",
+                        "required": true
                     },
                     "email": {
-                        "type": "string"
+                        "type": "string",
+                        "required": true
                     },
                     "password": {
                         "type": "string",
-                        "format": "password"
+                        "format": "password",
+                        "required": true
                     }
                 }
             },
             "UserLoginBody": {
                 "type": "object",
                 "properties": {
+                    "email": {
+                        "type": "string"
+                    },
                     "username": {
                         "type": "string"
                     },
                     "password": {
                         "type": "string",
-                        "format": "password"
+                        "format": "password",
+                        "required": true
                     }
                 }
             },
@@ -165,7 +260,8 @@
                 "properties": {
                     "token": {
                         "type": "string",
-                        "format": "password"
+                        "format": "password",
+                        "required": true
                     }
                 }
             },
