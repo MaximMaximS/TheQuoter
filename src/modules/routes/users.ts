@@ -2,7 +2,24 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
 import * as errors from "../errors";
+import { Request, Response } from "express";
 const saltRounds = 12;
+
+export async function registerRoute(req: Request, res: Response) {
+  const user = await register(req.body);
+  const token = getToken(user);
+  res.status(201).json({
+    token,
+  });
+}
+
+export async function loginRoute(req: Request, res: Response) {
+  const user = await login(req.body);
+  const token = getToken(user);
+  res.json({
+    token,
+  });
+}
 
 // Generate a JWT for the user
 export function getToken(user: IUser) {
