@@ -31,21 +31,12 @@ export async function getRoute(req: Request, res: Response) {
 }
 
 export async function postRoute(req: Request, res: Response) {
-  let role: "user" | "admin" = "user";
-  let state = req.body.state;
-  if (state !== "pending") {
-    if (typeof state !== "string") {
-      state = "pending";
-    } else {
-      role = "admin";
-    }
-  }
-  const user = await enforceRole(req.headers.authorization, role);
+  const user = await enforceRole(req.headers.authorization, "user");
   const quoteCreated = await create(
     user._id,
     string(req.body.text, "text"),
     id(req.body.originator, "originator"),
-    state,
+    user.role !== "user" ? "approved" : "pending",
     idOrUndefined(req.body.class),
     stringOrUndefined(req.body.context),
     stringOrUndefined(req.body.note)
