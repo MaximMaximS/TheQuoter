@@ -15,13 +15,14 @@ export interface IReducedQuote {
 }
 
 export interface IQuote extends Document {
-  state: "draft" | "pending" | "approved" | "rejected";
+  state: "pending" | "public";
   context?: string;
   text: string;
   note?: string;
   originator: Types.ObjectId;
   class: Types.ObjectId;
   createdBy: Types.ObjectId;
+  approvedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 
@@ -33,8 +34,8 @@ const QuoteSchema = new Schema<IQuote>(
   {
     state: {
       type: String,
-      enum: ["draft", "pending", "approved", "rejected"],
-      default: "draft",
+      enum: ["pending", "public"],
+      required: true,
     },
     context: {
       type: String,
@@ -65,6 +66,13 @@ const QuoteSchema = new Schema<IQuote>(
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
+    },
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: function (this: IQuote) {
+        return this.state === "public";
+      },
     },
   },
   {

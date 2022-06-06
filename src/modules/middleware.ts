@@ -34,6 +34,8 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
     res.sendStatus(404);
   } else if (err instanceof errors.ForbiddenError) {
     res.sendStatus(403);
+  } else if (err instanceof errors.ConflictError) {
+    res.sendStatus(409);
   } else {
     // Unhandled error
     console.error(err);

@@ -44,4 +44,13 @@ router
   .post(asyncMiddleware(quotes.postRoute))
   .all(methodNotAllowed);
 
+router.route("/quotes/:id").put(asyncMiddleware(quotes.putRoute));
+
+/*
+router
+  .route("/quotes/:id/process")
+  .post(asyncMiddleware(quotes.processRoute))
+  .all(methodNotAllowed);
+
+  */
 export default router;

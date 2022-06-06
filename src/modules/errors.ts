@@ -1,7 +1,5 @@
 export function genValidatorMessage(path: string, kind: string) {
   switch (kind) {
-    case "notallowed":
-      return "To use state 'pending' or 'rejected' you must be logged in.";
     case "required":
       return `${path} is required`;
     case "maxlength":
@@ -61,5 +59,14 @@ export class ForbiddenError extends Error {
   constructor() {
     super("Forbidden");
     this.name = "ForbiddenError";
+  }
+}
+
+export class ConflictError extends Error {
+  path;
+  constructor(path: string) {
+    super(`Conflict`);
+    this.name = "ConflictError";
+    this.path = path;
   }
 }
