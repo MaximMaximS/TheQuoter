@@ -40,6 +40,8 @@ router
   .route("/quotes")
   // Search quotes
   .get(asyncMiddleware(quotes.getRoute))
+  // Create quote
+  .post(asyncMiddleware(quotes.postRoute))
   .all(methodNotAllowed);
 
 export default router;

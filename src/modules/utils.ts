@@ -85,3 +85,13 @@ export function idOrUndefined(
   }
   return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : undefined;
 }
+
+export function id(id: string | undefined, path: string): Types.ObjectId {
+  if (id === undefined) {
+    throw new ValidatorError(path, "required");
+  }
+  if (!Types.ObjectId.isValid(id)) {
+    throw new ValidatorError(path, "ObjectId");
+  }
+  return new Types.ObjectId(id);
+}

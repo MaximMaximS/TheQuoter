@@ -1,9 +1,13 @@
 import { FilterQuery, Types } from "mongoose";
 import Quote, { IQuote, IReducedQuote } from "../models/quote";
-import { IUser } from "../models/user";
-import { IncorrectLoginError, ValidatorError } from "../errors";
 import { Request, Response } from "express";
-import { enforceRole, idOrUndefined, stringOrUndefined } from "../utils";
+import {
+  enforceRole,
+  string,
+  id,
+  idOrUndefined,
+  stringOrUndefined,
+} from "../utils";
 
 export async function getRoute(req: Request, res: Response) {
   // Approved is fine, but if it's not, we need to check if the user is an admin
@@ -24,6 +28,29 @@ export async function getRoute(req: Request, res: Response) {
   );
 
   res.json({ quotes: quotesFound }); // Send the found enteries
+}
+
+export async function postRoute(req: Request, res: Response) {
+  let role: "user" | "admin" = "user";
+  let state = req.body.state;
+  if (state !== "pending") {
+    if (typeof state !== "string") {
+      state = "pending";
+    } else {
+      role = "admin";
+    }
+  }
+  const user = await enforceRole(req.headers.authorization, role);
+  const quoteCreated = await create(
+    user._id,
+    string(req.body.text, "text"),
+    id(req.body.originator, "originator"),
+    state,
+    idOrUndefined(req.body.class),
+    stringOrUndefined(req.body.context),
+    stringOrUndefined(req.body.note)
+  );
+  res.json({ quote: quoteCreated });
 }
 
 export async function search(
@@ -51,17 +78,23 @@ export async function search(
   return Promise.all(quotes.map((q) => q.reduce()));
 }
 
-// TODO Not Implemented
-export async function create(name: unknown, user: IUser | null) {
-  if (user === null) {
-    throw new IncorrectLoginError();
-  }
-  if (typeof name !== "string") {
-    throw new ValidatorError("name", "required");
-  }
+export async function create(
+  user: Types.ObjectId,
+  text: string,
+  originator: Types.ObjectId,
+  state: string,
+  classId?: Types.ObjectId,
+  context?: string,
+  note?: string
+) {
   const result = await Quote.create({
-    name: name,
-    createdBy: user._id,
+    context,
+    text,
+    note,
+    originator,
+    classId,
+    state,
+    createdBy: user,
   });
   return result.reduce();
 }
