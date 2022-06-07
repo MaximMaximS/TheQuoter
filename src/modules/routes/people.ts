@@ -18,7 +18,7 @@ export async function postRoute(req: Request, res: Response) {
     string(req.body.type, "type"),
     _id
   );
-  res.status(201).json(personCreated);
+  res.status(201).json({ _id: personCreated._id });
 }
 
 export async function search(

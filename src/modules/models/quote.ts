@@ -11,7 +11,7 @@ export interface IReducedQuote {
   note?: string;
   originator: IReducedPerson;
   class?: IReducedClass;
-  state?: string;
+  state: "pending" | "public";
 }
 
 export interface IQuote extends Document {
@@ -82,9 +82,7 @@ const QuoteSchema = new Schema<IQuote>(
 
 QuoteSchema.plugin(idValidator);
 
-QuoteSchema.methods.reduce = async function (
-  keepState = false
-): Promise<IReducedQuote> {
+QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
   // Keep only id, context, text, note, originator, class, and optionally state
   const classDoc = await Class.findById(this.class);
   const originatorDoc = await Person.findById(this.originator);
@@ -100,9 +98,6 @@ QuoteSchema.methods.reduce = async function (
     class: classDoc !== null ? classDoc.reduce() : undefined,
     state: this.state,
   };
-  if (!keepState) {
-    delete doc.state;
-  }
   return doc;
 };
 

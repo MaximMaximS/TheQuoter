@@ -42,7 +42,7 @@ export async function postRoute(req: Request, res: Response) {
     stringOrUndefined(req.body.context),
     stringOrUndefined(req.body.note)
   );
-  res.json({ quote: quoteCreated });
+  res.status(user.role === "admin" ? 201 : 202).json({ _id: quoteCreated._id });
 }
 
 export async function putRoute(req: Request, res: Response) {
@@ -112,7 +112,7 @@ export async function putRoute(req: Request, res: Response) {
     current.class = classId;
   }
 
-  const quote = await current.save();
+  await current.save();
 
   res.sendStatus(204);
 }

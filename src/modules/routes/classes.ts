@@ -12,7 +12,7 @@ export async function getRoute(req: Request, res: Response) {
 export async function postRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "admin");
   const classCreated = await create(string(req.body.name, "name"), user);
-  res.status(201).json(classCreated);
+  res.status(201).json({ _id: classCreated._id });
 }
 
 export async function search(name: string | undefined) {
