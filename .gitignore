@@ -105,3 +105,5 @@ dist
 
 modules/ga_data/*
 !modules/ga_data/README.md
+
+docker-run.bat

@@ -43,7 +43,7 @@ router
 router
   .route("/classes")
   .get(
-    asyncMiddleware(async (req, res) => {
+    asyncMiddleware(async (req: Request, res: Response) => {
       const classesFound = await classes.search(
         extractFromUnknownObject(req.query, "name")
       );
@@ -52,7 +52,7 @@ router
   )
   .post(
     asyncMiddleware(enforceRole("admin")),
-    asyncMiddleware(async (req, res) => {
+    asyncMiddleware(async (req: Request, res: Response) => {
       const classCreated = await classes.create(
         req.body.name,
         await getUser(req.headers.authorization)
@@ -67,7 +67,7 @@ router
   .route("/people")
   .get(
     // Query people
-    asyncMiddleware(async (req, res) => {
+    asyncMiddleware(async (req: Request, res: Response) => {
       const peopleFound = await people.search(
         extractFromUnknownObject(req.query, "name"),
         extractFromUnknownObject(req.query, "type")
@@ -78,7 +78,7 @@ router
   .post(
     // New person
     asyncMiddleware(enforceRole("admin")),
-    asyncMiddleware(async (req, res) => {
+    asyncMiddleware(async (req: Request, res: Response) => {
       const personCreated = await people.create(
         req.body.name,
         req.body.type,
@@ -95,7 +95,7 @@ router
   .get(
     // Query
     asyncMiddleware(enforceRole("user")),
-    asyncMiddleware(async (req, res) => {
+    asyncMiddleware(async (req: Request, res: Response) => {
       let state = req.query.state;
       // Approved is fine, but if it's not, we need to check if the user is an admin
       if (state !== "approved") {
@@ -130,5 +130,10 @@ router
     })
   )
   .all(methodNotAllowed);
+
+// It's 5!
+router.route("/its5").all((req: Request, res: Response) => {
+  res.status(418).send("I'm a teapot");
+});
 
 export default router;
