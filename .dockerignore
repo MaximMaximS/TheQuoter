@@ -1,12 +1,14 @@
 node_modules
-/node_modules
-../node_modules
 npm-debug.log
-../npm-debug.log
-.env
-../.env
 src
-../src
+postman
+docker
+
+.env
+
+tsconfig.json
+
+README.md
 
 docker-build.bat
 docker-run.bat
