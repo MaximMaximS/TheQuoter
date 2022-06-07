@@ -6,7 +6,8 @@
   "scripts": {
     "prepare": "husky install",
     "dev": "nodemon ./src/server.ts",
-    "build": "tsc -p ./tsconfig.json"
+    "build": "tsc -p ./tsconfig.json",
+    "start": "nodemon ./dist/server.js"
   },
   "repository": {
     "type": "git",
