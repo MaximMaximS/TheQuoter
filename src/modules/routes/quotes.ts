@@ -8,12 +8,7 @@ import {
   idOrUndefined,
   stringOrUndefined,
 } from "../utils";
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  ValidatorError,
-} from "../errors";
+import { ForbiddenError, NotFoundError, ValidatorError } from "../errors";
 
 export async function getRoute(req: Request, res: Response) {
   // Public is fine, but if it's not, we need to check if the user is an admin
@@ -51,13 +46,17 @@ export async function postRoute(req: Request, res: Response) {
 }
 
 export async function putRoute(req: Request, res: Response) {
-  const id = req.params.id;
-  const current = await Quote.findById(id);
+  const current = await Quote.findById(req.params.id);
   if (current === null) {
     throw new NotFoundError();
   }
   const newState = stringOrUndefined(req.body.state);
-  const user = await enforceRole(req.headers.authorization, "user");
+  if (newState !== undefined) {
+    if (newState !== "public" && newState !== "pending") {
+      throw new ValidatorError("state", "invalid");
+    }
+  }
+  const user = await enforceRole(req.headers.authorization, "moderator");
   if (current.state === "public") {
     // Quote is public, so only admins can change it
 
@@ -74,32 +73,48 @@ export async function putRoute(req: Request, res: Response) {
       if (newState !== undefined) {
         throw new ForbiddenError();
       }
-    } else {
-      // User is not the author
-
-      // Check if user isn't a moderator of the class or an admin
-      if (
-        !(
-          user.role === "admin" ||
-          (user.role === "moderator" && user.class.equals(current.class))
-        )
-      ) {
-        throw new ForbiddenError();
-      }
-    }
-  }
-  if (newState !== undefined) {
-    if (newState !== "public" && newState !== "pending") {
-      throw new ValidatorError("state", "invalid");
-    }
-    if (current.state === "public" && newState === "pending") {
-      throw new ConflictError("state");
+    } else if (
+      user.role !== "admin" &&
+      !user.class.equals(current.class || "")
+    ) {
+      // User isn't creator, an admin, or a moderator fro msame class
+      throw new ForbiddenError();
     }
   }
 
   // Edit the quote
+  if (newState !== undefined) {
+    current.state = newState;
+  }
 
-  res.sendStatus(501);
+  const text = string(req.body.text, "text");
+  if (current.text !== text) {
+    current.text = text;
+  }
+
+  const originator = id(req.body.originator, "originator");
+  if (current.originator !== originator) {
+    current.originator = originator;
+  }
+
+  const context = stringOrUndefined(req.body.context);
+  if (current.context !== context) {
+    current.context = context;
+  }
+
+  const note = stringOrUndefined(req.body.note);
+  if (current.note !== note) {
+    current.note = note;
+  }
+
+  const classId = idOrUndefined(req.body.class);
+  if (current.class !== classId) {
+    current.class = classId;
+  }
+
+  const quote = await current.save();
+
+  res.sendStatus(204);
 }
 
 export async function search(

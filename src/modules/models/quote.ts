@@ -20,7 +20,7 @@ export interface IQuote extends Document {
   text: string;
   note?: string;
   originator: Types.ObjectId;
-  class: Types.ObjectId;
+  class?: Types.ObjectId;
   createdBy: Types.ObjectId;
   approvedBy?: Types.ObjectId;
   createdAt: Date;
@@ -91,7 +91,7 @@ QuoteSchema.methods.reduce = async function (
   if (originatorDoc === null) {
     throw new ServerError("Not found");
   }
-  const doc = {
+  const doc: IReducedQuote = {
     _id: this._id,
     context: this.context,
     text: this.text,
