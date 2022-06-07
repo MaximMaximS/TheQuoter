@@ -136,4 +136,14 @@ router.route("/its5").all((req: Request, res: Response) => {
   res.status(418).send("I'm a teapot");
 });
 
+router.route("/echo").all((req: Request, res: Response) => {
+  res.status(200).send(req.body !== null ? req.body : req.query.message);
+  console.log(
+    "Echoing:",
+    req.body !== null ? req.body : req.query.message,
+    "from",
+    req.headers.origin
+  );
+});
+
 export default router;
