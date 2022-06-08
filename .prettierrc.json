@@ -11,6 +11,5 @@
     "routes/(.*)$",
     "^[.]"
   ],
-  "importOrderSeparation": true,
   "importOrderSortSpecifiers": true
 }

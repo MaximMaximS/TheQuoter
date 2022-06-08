@@ -1,9 +1,7 @@
 import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
-
 import User, { IUser } from "../models/user";
-
 import * as errors from "../errors";
 
 const saltRounds = 12;

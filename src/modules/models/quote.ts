@@ -1,6 +1,5 @@
 import { Document, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
-
 import { ServerError } from "../errors";
 import Class, { IReducedClass } from "./class";
 import Person, { IReducedPerson } from "./person";

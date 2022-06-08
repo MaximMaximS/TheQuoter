@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { FilterQuery, Types } from "mongoose";
-
 import Person, { IPerson } from "../models/person";
-
 import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 

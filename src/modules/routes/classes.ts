@@ -1,9 +1,7 @@
 import { Request, Response } from "express";
 import { FilterQuery } from "mongoose";
-
 import Class, { IClass } from "../models/class";
 import { IUser } from "../models/user";
-
 import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 

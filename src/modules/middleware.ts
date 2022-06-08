@@ -5,7 +5,6 @@ import {
   TokenExpiredError,
 } from "jsonwebtoken";
 import mongoose from "mongoose";
-
 import * as errors from "./errors";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars

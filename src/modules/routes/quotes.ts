@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { FilterQuery, Types } from "mongoose";
-
 import Quote, { IQuote, IReducedQuote } from "../models/quote";
-
 import { ForbiddenError, NotFoundError, ValidatorError } from "../errors";
 import {
   enforceRole,

@@ -1,11 +1,9 @@
 import { Router } from "express";
 import asyncMiddleware from "middleware-async";
-
 import * as classes from "./routes/classes";
 import * as people from "./routes/people";
 import * as quotes from "./routes/quotes";
 import * as users from "./routes/users";
-
 import { methodNotAllowed } from "./middleware";
 
 const router = Router();

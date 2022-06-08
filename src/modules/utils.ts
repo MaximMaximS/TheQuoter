@@ -14,9 +14,7 @@ export function isObject(obj: unknown): obj is object {
 */
 import { verify } from "jsonwebtoken";
 import { Types } from "mongoose";
-
 import User from "./models/user";
-
 import { ForbiddenError, IncorrectLoginError, ValidatorError } from "./errors";
 
 // Get user from authorization header
