@@ -1,15 +1,26 @@
+import { Request, Response } from "express";
 import { FilterQuery } from "mongoose";
+
 import Class, { IClass } from "../models/class";
 import { IUser } from "../models/user";
-import { Request, Response } from "express";
-import { enforceRole, stringOrUndefined, string } from "../utils";
+
+import { NotFoundError } from "../errors";
+import { enforceRole, string, stringOrUndefined } from "../utils";
 
 export async function getRoute(req: Request, res: Response) {
+  const classFound = await Class.findById(req.params.id);
+  if (classFound === null) {
+    throw new NotFoundError();
+  }
+  res.json({ class: classFound.reduce() });
+}
+
+export async function searchRoute(req: Request, res: Response) {
   const classesFound = await search(stringOrUndefined(req.query.name));
   res.json({ classes: classesFound });
 }
 
-export async function postRoute(req: Request, res: Response) {
+export async function createRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "admin");
   const classCreated = await create(string(req.body.name, "name"), user);
   res.status(201).json({ _id: classCreated._id });

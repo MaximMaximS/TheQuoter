@@ -1,16 +1,18 @@
-import { FilterQuery, Types } from "mongoose";
-import Quote, { IQuote, IReducedQuote } from "../models/quote";
 import { Request, Response } from "express";
+import { FilterQuery, Types } from "mongoose";
+
+import Quote, { IQuote, IReducedQuote } from "../models/quote";
+
+import { ForbiddenError, NotFoundError, ValidatorError } from "../errors";
 import {
   enforceRole,
-  string,
   id,
   idOrUndefined,
+  string,
   stringOrUndefined,
 } from "../utils";
-import { ForbiddenError, NotFoundError, ValidatorError } from "../errors";
 
-export async function getRoute(req: Request, res: Response) {
+export async function searchRoute(req: Request, res: Response) {
   // Public is fine, but if it's not, we need to check if the user is an admin
   let state = req.query.state;
   if (state !== "public") {
@@ -31,7 +33,7 @@ export async function getRoute(req: Request, res: Response) {
   res.json({ quotes: quotesFound }); // Send the found enteries
 }
 
-export async function postRoute(req: Request, res: Response) {
+export async function createRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "user");
   const quoteCreated = await create(
     user._id,
@@ -45,7 +47,7 @@ export async function postRoute(req: Request, res: Response) {
   res.status(user.role === "admin" ? 201 : 202).json({ _id: quoteCreated._id });
 }
 
-export async function putRoute(req: Request, res: Response) {
+export async function editRoute(req: Request, res: Response) {
   const current = await Quote.findById(req.params.id);
   if (current === null) {
     throw new NotFoundError();
@@ -77,7 +79,7 @@ export async function putRoute(req: Request, res: Response) {
       user.role !== "admin" &&
       !user.class.equals(current.class || "")
     ) {
-      // User isn't creator, an admin, or a moderator fro msame class
+      // User isn't creator, an admin, or a moderator from same class
       throw new ForbiddenError();
     }
   }

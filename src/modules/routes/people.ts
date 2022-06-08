@@ -1,9 +1,20 @@
-import { FilterQuery, Types } from "mongoose";
-import Person, { IPerson } from "../models/person";
 import { Request, Response } from "express";
+import { FilterQuery, Types } from "mongoose";
+
+import Person, { IPerson } from "../models/person";
+
+import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 
 export async function getRoute(req: Request, res: Response) {
+  const personFound = await Person.findById(req.params.id);
+  if (personFound === null) {
+    throw new NotFoundError();
+  }
+  res.json({ person: personFound.reduce() });
+}
+
+export async function searchRoute(req: Request, res: Response) {
   const peopleFound = await search(
     stringOrUndefined(req.query.name),
     stringOrUndefined(req.query.type)
@@ -11,7 +22,7 @@ export async function getRoute(req: Request, res: Response) {
   res.json({ people: peopleFound });
 }
 
-export async function postRoute(req: Request, res: Response) {
+export async function createRoute(req: Request, res: Response) {
   const { _id } = await enforceRole(req.headers.authorization, "admin");
   const personCreated = await create(
     string(req.body.name, "name"),

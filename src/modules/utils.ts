@@ -12,11 +12,12 @@ export function isObject(obj: unknown): obj is object {
   return typeof obj === "object" && !Array.isArray(obj) && obj !== null;
 }
 */
-
 import { verify } from "jsonwebtoken";
-import User from "./models/user";
-import { ForbiddenError, IncorrectLoginError, ValidatorError } from "./errors";
 import { Types } from "mongoose";
+
+import User from "./models/user";
+
+import { ForbiddenError, IncorrectLoginError, ValidatorError } from "./errors";
 
 // Get user from authorization header
 export async function getUser(authHeader: string | undefined) {

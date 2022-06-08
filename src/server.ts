@@ -1,9 +1,10 @@
-import "dotenv/config"; // Enviroment init
-import mongoose from "mongoose"; // DB
-import express from "express"; // Webserver
-import slowdown from "express-slow-down"; // WS utils
+import "dotenv/config";
+import express from "express";
 import ratelimit from "express-rate-limit";
+import slowdown from "express-slow-down";
 import helmet from "helmet";
+import mongoose from "mongoose";
+
 import { errorHandler, notFound } from "./modules/middleware";
 import router from "./modules/router";
 

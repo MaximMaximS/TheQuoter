@@ -1,11 +1,12 @@
+import { ErrorRequestHandler, Request, Response } from "express";
 import {
   JsonWebTokenError,
   NotBeforeError,
   TokenExpiredError,
 } from "jsonwebtoken";
-import * as errors from "./errors";
 import mongoose from "mongoose";
-import { ErrorRequestHandler, Request, Response } from "express";
+
+import * as errors from "./errors";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {

@@ -1,10 +1,12 @@
 import { Router } from "express";
 import asyncMiddleware from "middleware-async";
-import { methodNotAllowed } from "./middleware";
-import * as users from "./routes/users";
+
 import * as classes from "./routes/classes";
 import * as people from "./routes/people";
 import * as quotes from "./routes/quotes";
+import * as users from "./routes/users";
+
+import { methodNotAllowed } from "./middleware";
 
 const router = Router();
 
@@ -23,28 +25,28 @@ router
 router
   .route("/classes")
   // Search classes
-  .get(asyncMiddleware(classes.getRoute))
+  .get(asyncMiddleware(classes.searchRoute))
   // Create class
-  .post(asyncMiddleware(classes.postRoute))
+  .post(asyncMiddleware(classes.createRoute))
   .all(methodNotAllowed);
 
 router
   .route("/people")
   // Search people
-  .get(asyncMiddleware(people.getRoute))
+  .get(asyncMiddleware(people.searchRoute))
   // Create person
-  .post(asyncMiddleware(people.postRoute))
+  .post(asyncMiddleware(people.createRoute))
   .all(methodNotAllowed);
 
 router
   .route("/quotes")
   // Search quotes
-  .get(asyncMiddleware(quotes.getRoute))
+  .get(asyncMiddleware(quotes.searchRoute))
   // Create quote
-  .post(asyncMiddleware(quotes.postRoute))
+  .post(asyncMiddleware(quotes.createRoute))
   .all(methodNotAllowed);
 
-router.route("/quotes/:id").put(asyncMiddleware(quotes.putRoute));
+router.route("/quotes/:id").put(asyncMiddleware(quotes.editRoute));
 
 /*
 router

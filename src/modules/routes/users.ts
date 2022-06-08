@@ -1,8 +1,11 @@
 import bcrypt from "bcrypt";
-import jwt from "jsonwebtoken";
-import User, { IUser } from "../models/user";
-import * as errors from "../errors";
 import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+
+import User, { IUser } from "../models/user";
+
+import * as errors from "../errors";
+
 const saltRounds = 12;
 
 export async function registerRoute(req: Request, res: Response) {

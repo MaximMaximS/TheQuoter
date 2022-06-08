@@ -1,6 +1,6 @@
-import { Schema, Types, model, Document } from "mongoose";
-import uniqueValidator from "mongoose-unique-validator";
+import { Document, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
+import uniqueValidator from "mongoose-unique-validator";
 
 export interface IUser extends Document {
   username: string;
