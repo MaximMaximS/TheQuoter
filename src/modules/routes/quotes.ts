@@ -19,6 +19,31 @@ export async function getRoute(req: Request, res: Response) {
   res.json(reducedQuote);
 }
 
+export async function search(
+  originator: Types.ObjectId | undefined,
+  classId: Types.ObjectId | undefined,
+  text: string | undefined,
+  state: string | undefined
+): Promise<IReducedQuote[]> {
+  const query: FilterQuery<IQuote> = {};
+  if (originator !== undefined) {
+    query["originator"] = originator;
+  }
+  if (classId !== undefined) {
+    query["class"] = classId;
+  }
+  if (text !== undefined) {
+    query["text"] = { $regex: text, $options: "i" };
+  }
+  if (state !== undefined) {
+    query["state"] = state;
+  }
+  const quotes = await Quote.find(query);
+
+  // Simplify all quotes
+  return Promise.all(quotes.map((q) => q.reduce()));
+}
+
 export async function searchRoute(req: Request, res: Response) {
   // Public is fine, but if it's not, we need to check if the user is an admin
   let state = req.query.state;
@@ -40,6 +65,28 @@ export async function searchRoute(req: Request, res: Response) {
   res.json({ quotes: quotesFound }); // Send the found enteries
 }
 
+export async function create(
+  user: Types.ObjectId,
+  text: string,
+  originator: Types.ObjectId,
+  state: string,
+  classId?: Types.ObjectId,
+  context?: string,
+  note?: string
+) {
+  const result = await Quote.create({
+    context,
+    text,
+    note,
+    originator,
+    classId,
+    state,
+    createdBy: user,
+    approvedBy: state === "public" ? user : undefined,
+  });
+  return result.reduce();
+}
+
 export async function createRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "user");
   const quoteCreated = await create(
@@ -54,16 +101,20 @@ export async function createRoute(req: Request, res: Response) {
   res.status(user.role === "admin" ? 201 : 202).json({ _id: quoteCreated._id });
 }
 
+// TODO
+// eslint-disable-next-line sonarjs/cognitive-complexity
 export async function editRoute(req: Request, res: Response) {
   const current = await Quote.findById(req.params.id);
   if (current === null) {
     throw new NotFoundError();
   }
   const newState = stringOrUndefined(req.body.state);
-  if (newState !== undefined) {
-    if (newState !== "public" && newState !== "pending") {
-      throw new ValidatorError("state", "invalid");
-    }
+  if (
+    newState !== undefined &&
+    newState !== "public" &&
+    newState !== "pending"
+  ) {
+    throw new ValidatorError("state", "invalid");
   }
   const user = await enforceRole(req.headers.authorization, "moderator");
   if (current.state === "public") {
@@ -124,51 +175,4 @@ export async function editRoute(req: Request, res: Response) {
   await current.save();
 
   res.sendStatus(204);
-}
-
-export async function search(
-  originator: Types.ObjectId | undefined,
-  classId: Types.ObjectId | undefined,
-  text: string | undefined,
-  state: string | undefined
-): Promise<IReducedQuote[]> {
-  const query: FilterQuery<IQuote> = {};
-  if (originator !== undefined) {
-    query["originator"] = originator;
-  }
-  if (classId !== undefined) {
-    query["class"] = classId;
-  }
-  if (text !== undefined) {
-    query["text"] = { $regex: text, $options: "i" };
-  }
-  if (state !== undefined) {
-    query["state"] = state;
-  }
-  const quotes = await Quote.find(query);
-
-  // Simplify all quotes
-  return Promise.all(quotes.map((q) => q.reduce()));
-}
-
-export async function create(
-  user: Types.ObjectId,
-  text: string,
-  originator: Types.ObjectId,
-  state: string,
-  classId?: Types.ObjectId,
-  context?: string,
-  note?: string
-) {
-  const result = await Quote.create({
-    context,
-    text,
-    note,
-    originator,
-    classId,
-    state,
-    createdBy: user,
-    approvedBy: state === "public" ? user : undefined,
-  });
-  return result.reduce();
 }

@@ -13,17 +13,6 @@ export async function getRoute(req: Request, res: Response) {
   res.json(classFound.reduce());
 }
 
-export async function searchRoute(req: Request, res: Response) {
-  const classesFound = await search(stringOrUndefined(req.query.name));
-  res.json({ classes: classesFound });
-}
-
-export async function createRoute(req: Request, res: Response) {
-  const user = await enforceRole(req.headers.authorization, "admin");
-  const classCreated = await create(string(req.body.name, "name"), user);
-  res.status(201).json({ _id: classCreated._id });
-}
-
 export async function search(name: string | undefined) {
   const query: FilterQuery<IClass> = {};
   if (name !== undefined) {
@@ -34,10 +23,21 @@ export async function search(name: string | undefined) {
   return classes.map((c) => c.reduce());
 }
 
+export async function searchRoute(req: Request, res: Response) {
+  const classesFound = await search(stringOrUndefined(req.query.name));
+  res.json({ classes: classesFound });
+}
+
 export async function create(name: string, user: IUser) {
   const result = await Class.create({
-    name: name,
+    name,
     createdBy: user._id,
   });
   return result.reduce();
+}
+
+export async function createRoute(req: Request, res: Response) {
+  const user = await enforceRole(req.headers.authorization, "admin");
+  const classCreated = await create(string(req.body.name, "name"), user);
+  res.status(201).json({ _id: classCreated._id });
 }
