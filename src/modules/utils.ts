@@ -81,12 +81,16 @@ export function string(str: unknown, path: string): string {
 }
 
 export function idOrUndefined(
-  id: string | undefined
+  id: unknown,
+  path: string
 ): Types.ObjectId | undefined {
   if (id === undefined) {
     return undefined;
   }
-  return Types.ObjectId.isValid(id) ? new Types.ObjectId(id) : undefined;
+  if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+    throw new ValidatorError(path, "invalid");
+  }
+  return new Types.ObjectId(id);
 }
 
 export function id(id: string | undefined, path: string): Types.ObjectId {

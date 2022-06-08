@@ -56,8 +56,8 @@ export async function searchRoute(req: Request, res: Response) {
   }
 
   const quotesFound = await search(
-    idOrUndefined(stringOrUndefined(req.query.originator)),
-    idOrUndefined(stringOrUndefined(req.query.class)),
+    idOrUndefined(req.query.originator, "originator"),
+    idOrUndefined(req.query.class, "class"),
     stringOrUndefined(req.query.text),
     state
   );
@@ -94,7 +94,7 @@ export async function createRoute(req: Request, res: Response) {
     string(req.body.text, "text"),
     id(req.body.originator, "originator"),
     user.role !== "admin" ? "pending" : "public",
-    idOrUndefined(req.body.class),
+    idOrUndefined(req.body.class, "class"),
     stringOrUndefined(req.body.context),
     stringOrUndefined(req.body.note)
   );
@@ -116,7 +116,7 @@ export async function editRoute(req: Request, res: Response) {
   ) {
     throw new ValidatorError("state", "invalid");
   }
-  const user = await enforceRole(req.headers.authorization, "moderator");
+  const user = await enforceRole(req.headers.authorization, "user");
   if (current.state === "public") {
     // Quote is public, so only admins can change it
 
@@ -124,18 +124,22 @@ export async function editRoute(req: Request, res: Response) {
     if (user.role !== "admin") {
       throw new ForbiddenError();
     }
-  } else if (current.state === "pending") {
+  } else {
     // Quote is pending, so admins, moderators from the same class, and the author can change it
 
     // If user is creator
+    console.log(current.createdBy);
+    console.log(user._id);
     if (current.createdBy.equals(user._id)) {
       // User is creator, so they can't change the state
       if (newState !== undefined) {
         throw new ForbiddenError();
       }
     } else if (
-      user.role !== "admin" &&
-      !user.class.equals(current.class || "")
+      !(
+        user.role === "admin" ||
+        (user.role === "moderator" && user.class.equals(current.class || ""))
+      )
     ) {
       // User isn't creator, an admin, or a moderator from same class
       throw new ForbiddenError();
@@ -146,30 +150,39 @@ export async function editRoute(req: Request, res: Response) {
   if (newState !== undefined) {
     current.state = newState;
   }
-
-  const text = string(req.body.text, "text");
-  if (current.text !== text) {
+  // Text - change or nothing - don't change
+  const text = stringOrUndefined(req.body.text);
+  if (text !== undefined) {
     current.text = text;
   }
 
-  const originator = id(req.body.originator, "originator");
-  if (current.originator !== originator) {
+  // Id - change or nothing - don't change
+  const originator = idOrUndefined(req.body.originator, "originator");
+  if (originator !== undefined) {
     current.originator = originator;
   }
 
+  // Text - change, "" - unset, or nothing - don't change
   const context = stringOrUndefined(req.body.context);
-  if (current.context !== context) {
-    current.context = context;
+  if (context !== undefined) {
+    current.context = context === "" ? undefined : context;
   }
 
+  // Text - change, "" - unset, or nothing - don't change
   const note = stringOrUndefined(req.body.note);
   if (current.note !== note) {
-    current.note = note;
+    current.note = note === "" ? undefined : note;
   }
 
-  const classId = idOrUndefined(req.body.class);
-  if (current.class !== classId) {
-    current.class = classId;
+  // Id - change, "" - unset, or nothing - don't change
+  const classString = stringOrUndefined(req.body.class);
+  if (classString === "") {
+    current.class = undefined;
+  } else {
+    const classId = idOrUndefined(req.body.class, "class");
+    if (classId !== undefined) {
+      current.class = classId;
+    }
   }
 
   await current.save();
