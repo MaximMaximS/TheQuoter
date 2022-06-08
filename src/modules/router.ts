@@ -29,11 +29,23 @@ router
   .all(methodNotAllowed);
 
 router
+  .route("/classes/:id")
+  // Get class
+  .get(asyncMiddleware(classes.getRoute))
+  .all(methodNotAllowed);
+
+router
   .route("/people")
   // Search people
   .get(asyncMiddleware(people.searchRoute))
   // Create person
   .post(asyncMiddleware(people.createRoute))
+  .all(methodNotAllowed);
+
+router
+  .route("/people/:id")
+  // Get person
+  .get(asyncMiddleware(people.getRoute))
   .all(methodNotAllowed);
 
 router
@@ -44,13 +56,12 @@ router
   .post(asyncMiddleware(quotes.createRoute))
   .all(methodNotAllowed);
 
-router.route("/quotes/:id").put(asyncMiddleware(quotes.editRoute));
-
-/*
 router
-  .route("/quotes/:id/process")
-  .post(asyncMiddleware(quotes.processRoute))
+  .route("/quotes/:id")
+  // Get quote
+  .get(asyncMiddleware(quotes.getRoute))
+  // Edit quote
+  .put(asyncMiddleware(quotes.editRoute))
   .all(methodNotAllowed);
 
-  */
 export default router;

@@ -10,6 +10,15 @@ import {
   stringOrUndefined,
 } from "../utils";
 
+export async function getRoute(req: Request, res: Response) {
+  const quoteFound = await Quote.findById(req.params.id);
+  if (quoteFound === null) {
+    throw new NotFoundError();
+  }
+  const reducedQuote = await quoteFound.reduce();
+  res.json(reducedQuote);
+}
+
 export async function searchRoute(req: Request, res: Response) {
   // Public is fine, but if it's not, we need to check if the user is an admin
   let state = req.query.state;

@@ -9,7 +9,7 @@ export async function getRoute(req: Request, res: Response) {
   if (personFound === null) {
     throw new NotFoundError();
   }
-  res.json({ person: personFound.reduce() });
+  res.json(personFound.reduce());
 }
 
 export async function searchRoute(req: Request, res: Response) {

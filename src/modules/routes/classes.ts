@@ -10,7 +10,7 @@ export async function getRoute(req: Request, res: Response) {
   if (classFound === null) {
     throw new NotFoundError();
   }
-  res.json({ class: classFound.reduce() });
+  res.json(classFound.reduce());
 }
 
 export async function searchRoute(req: Request, res: Response) {
