@@ -43,14 +43,14 @@ export class ServerError extends Error {
 
 export class IncorrectLoginError extends Error {
   constructor() {
-    super("Incorrect login");
+    super("IncorrectLogin");
     this.name = "IncorrectLoginError";
   }
 }
 
 export class NotFoundError extends Error {
   constructor() {
-    super("Not found");
+    super("NotFound");
     this.name = "NotFoundError";
   }
 }

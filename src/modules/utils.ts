@@ -15,7 +15,12 @@ export function isObject(obj: unknown): obj is object {
 import { verify } from "jsonwebtoken";
 import { Types } from "mongoose";
 import User from "./models/user";
-import { ForbiddenError, IncorrectLoginError, ValidatorError } from "./errors";
+import {
+  ForbiddenError,
+  IncorrectLoginError,
+  ServerError,
+  ValidatorError,
+} from "./errors";
 
 // Get user from authorization header
 export async function getUser(authHeader: string | undefined) {
@@ -23,17 +28,16 @@ export async function getUser(authHeader: string | undefined) {
     // Slice off Bearer prefix
     const token = authHeader.split(" ")[1];
     if (process.env.JWT_SECRET === undefined) {
-      console.log("JWT_SECRET is not defined");
-      process.exit(1);
+      throw new ServerError("JWT_SECRET is not defined");
     }
-    const id = verify(token, process.env.JWT_SECRET);
+    const uid = verify(token, process.env.JWT_SECRET);
     // Check if id is not an object
-    if (typeof id === "string") {
-      return null;
+    if (typeof uid === "string") {
+      return;
     }
-    return await User.findById(id.id);
+    return (await User.findById(uid.id)) || undefined;
   }
-  return null;
+  return;
 }
 
 export async function enforceRole(
@@ -43,7 +47,7 @@ export async function enforceRole(
   // Verify token
   const user = await getUser(authHeader);
   // If admin false then enforce moderator or admin, otherwise enforce admin
-  if (user === null) {
+  if (user === undefined) {
     throw new IncorrectLoginError();
   }
   // User is always at least "user" so no need to check

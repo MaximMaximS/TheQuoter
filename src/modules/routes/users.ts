@@ -5,23 +5,6 @@ import User, { IUser } from "../models/user";
 import * as errors from "../errors";
 
 const saltRounds = 12;
-
-export async function registerRoute(req: Request, res: Response) {
-  const user = await register(req.body);
-  const token = getToken(user);
-  res.status(201).json({
-    token,
-  });
-}
-
-export async function loginRoute(req: Request, res: Response) {
-  const user = await login(req.body);
-  const token = getToken(user);
-  res.json({
-    token,
-  });
-}
-
 // Generate a JWT for the user
 export function getToken(user: IUser) {
   if (process.env.JWT_SECRET === undefined) {
@@ -29,6 +12,42 @@ export function getToken(user: IUser) {
   }
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "1d",
+  });
+}
+
+export interface IRegisterBody {
+  email?: string;
+  username?: string;
+  password?: string;
+  class?: string;
+}
+
+export async function register(body: IRegisterBody): Promise<IUser> {
+  const { password, username, email } = body;
+  if (typeof password !== "string") {
+    throw new errors.ValidatorError("password", "required");
+  }
+  if (password.length < 6) {
+    throw new errors.ValidatorError("password", "minlength");
+  }
+
+  // Hash password
+  const hash = await bcrypt.hash(password, saltRounds);
+
+  // Create user
+  return await User.create({
+    username,
+    hash,
+    email,
+    class: body.class,
+  });
+}
+
+export async function registerRoute(req: Request, res: Response) {
+  const user = await register(req.body);
+  const token = getToken(user);
+  res.status(201).json({
+    token,
   });
 }
 
@@ -57,31 +76,10 @@ export async function login(body: ILoginBody): Promise<IUser> {
   return user;
 }
 
-export interface IRegisterBody {
-  email?: string;
-  username?: string;
-  password?: string;
-  class?: string;
-}
-
-export async function register(body: IRegisterBody): Promise<IUser> {
-  const { password } = body;
-  if (typeof password !== "string") {
-    throw new errors.ValidatorError("password", "required");
-  }
-  if (password.length < 6) {
-    throw new errors.ValidatorError("password", "minlength");
-  }
-
-  // Hash password
-  const hash = await bcrypt.hash(password, saltRounds);
-
-  // Create user
-  const user = await User.create({
-    username: body.username,
-    hash,
-    email: body.email,
-    class: body.class,
+export async function loginRoute(req: Request, res: Response) {
+  const user = await login(req.body);
+  const token = getToken(user);
+  res.json({
+    token,
   });
-  return user;
 }

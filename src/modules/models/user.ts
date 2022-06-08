@@ -21,7 +21,7 @@ const UserSchema = new Schema<IUser>(
       trim: true,
       minlength: 3,
       maxlength: 20,
-      match: /^[a-zA-Z0-9_]+$/,
+      match: /^\w+$/,
     },
     hash: {
       type: String,
@@ -34,7 +34,7 @@ const UserSchema = new Schema<IUser>(
       trim: true,
       // Match email format
       match:
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
+        /^(([^\s"(),.:;<>@[\\\]]+(\.[^\s"(),.:;<>@[\\\]]+)*)|(".+"))@((\[(?:\d{1,3}\.){3}\d{1,3}])|(([\dA-Za-z-]+\.)+[A-Za-z]{2,}))$/,
     },
     role: {
       type: String,

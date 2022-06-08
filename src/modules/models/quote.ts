@@ -70,7 +70,7 @@ const QuoteSchema = new Schema<IQuote>(
     approvedBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
-      required: function (this: IQuote) {
+      required(this: IQuote) {
         return this.state === "public";
       },
     },

@@ -7,8 +7,6 @@ import mongoose from "mongoose";
 import { errorHandler, notFound } from "./modules/middleware";
 import router from "./modules/router";
 
-main(); // Entry point
-
 async function main() {
   // No args - all arg passes with ENViroment
   if (process.env.MONGODB_URI === undefined) {
@@ -58,3 +56,5 @@ async function main() {
     console.info(`Server running on http://localhost:${PORT}`);
   });
 }
+
+main(); // Entry point
