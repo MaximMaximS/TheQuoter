@@ -1,8 +1,8 @@
-import { Schema, Types, model, Document } from "mongoose";
-import Class, { IReducedClass } from "./class";
-import Person, { IReducedPerson } from "./person";
+import { Document, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import { ServerError } from "../errors";
+import Class, { IReducedClass } from "./class";
+import Person, { IReducedPerson } from "./person";
 
 export interface IReducedQuote {
   _id: Types.ObjectId;
@@ -11,17 +11,18 @@ export interface IReducedQuote {
   note?: string;
   originator: IReducedPerson;
   class?: IReducedClass;
-  state?: string;
+  state: "pending" | "public";
 }
 
 export interface IQuote extends Document {
-  state: "draft" | "pending" | "approved" | "rejected";
+  state: "pending" | "public";
   context?: string;
   text: string;
   note?: string;
   originator: Types.ObjectId;
-  class: Types.ObjectId;
+  class?: Types.ObjectId;
   createdBy: Types.ObjectId;
+  approvedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 
@@ -33,8 +34,8 @@ const QuoteSchema = new Schema<IQuote>(
   {
     state: {
       type: String,
-      enum: ["draft", "pending", "approved", "rejected"],
-      default: "draft",
+      enum: ["pending", "public"],
+      required: true,
     },
     context: {
       type: String,
@@ -66,6 +67,13 @@ const QuoteSchema = new Schema<IQuote>(
       ref: "User",
       required: true,
     },
+    approvedBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required(this: IQuote) {
+        return this.state === "public";
+      },
+    },
   },
   {
     timestamps: true,
@@ -74,16 +82,14 @@ const QuoteSchema = new Schema<IQuote>(
 
 QuoteSchema.plugin(idValidator);
 
-QuoteSchema.methods.reduce = async function (
-  keepState = false
-): Promise<IReducedQuote> {
+QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
   // Keep only id, context, text, note, originator, class, and optionally state
   const classDoc = await Class.findById(this.class);
   const originatorDoc = await Person.findById(this.originator);
   if (originatorDoc === null) {
     throw new ServerError("Not found");
   }
-  const doc = {
+  const doc: IReducedQuote = {
     _id: this._id,
     context: this.context,
     text: this.text,
@@ -92,9 +98,6 @@ QuoteSchema.methods.reduce = async function (
     class: classDoc !== null ? classDoc.reduce() : undefined,
     state: this.state,
   };
-  if (!keepState) {
-    delete doc.state;
-  }
   return doc;
 };
 

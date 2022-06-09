@@ -1,13 +1,11 @@
-import "dotenv/config"; // Enviroment init
-import mongoose from "mongoose"; // DB
-import express from "express"; // Webserver
-import slowdown from "express-slow-down"; // WS utils
+import "dotenv/config";
+import express from "express";
 import ratelimit from "express-rate-limit";
+import slowdown from "express-slow-down";
 import helmet from "helmet";
+import mongoose from "mongoose";
 import { errorHandler, notFound } from "./modules/middleware";
 import router from "./modules/router";
-
-main(); // Entry point
 
 async function main() {
   // No args - all arg passes with ENViroment
@@ -58,3 +56,5 @@ async function main() {
     console.info(`Server running on http://localhost:${PORT}`);
   });
 }
+
+main(); // Entry point

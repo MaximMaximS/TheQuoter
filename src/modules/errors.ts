@@ -1,7 +1,5 @@
 export function genValidatorMessage(path: string, kind: string) {
   switch (kind) {
-    case "notallowed":
-      return "To use state 'pending' or 'rejected' you must be logged in.";
     case "required":
       return `${path} is required`;
     case "maxlength":
@@ -14,6 +12,8 @@ export function genValidatorMessage(path: string, kind: string) {
       return `${path} does not match the pattern`;
     case "ObjectId":
       return `${path} is not a valid ObjectId`;
+    case "state":
+      return `${path} can be only "pending" or "public"`;
     default:
       return `${path} is not valid (${kind})`;
   }
@@ -45,14 +45,14 @@ export class ServerError extends Error {
 
 export class IncorrectLoginError extends Error {
   constructor() {
-    super("Incorrect login");
+    super("IncorrectLogin");
     this.name = "IncorrectLoginError";
   }
 }
 
 export class NotFoundError extends Error {
   constructor() {
-    super("Not found");
+    super("NotFound");
     this.name = "NotFoundError";
   }
 }
@@ -61,5 +61,14 @@ export class ForbiddenError extends Error {
   constructor() {
     super("Forbidden");
     this.name = "ForbiddenError";
+  }
+}
+
+export class ConflictError extends Error {
+  path;
+  constructor(path: string) {
+    super(`Conflict`);
+    this.name = "ConflictError";
+    this.path = path;
   }
 }
