@@ -64,4 +64,9 @@ router
   .put(asyncMiddleware(quotes.editRoute))
   .all(methodNotAllowed);
 
+router
+  .route("/quotes/:id/state")
+  .post(asyncMiddleware(quotes.stateRoute))
+  .all(methodNotAllowed);
+
 export default router;

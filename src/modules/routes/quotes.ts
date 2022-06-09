@@ -2,7 +2,12 @@ import { Request, Response } from "express";
 import { FilterQuery, Types } from "mongoose";
 import Quote, { IQuote, IReducedQuote } from "../models/quote";
 import { IUser } from "../models/user";
-import { ForbiddenError, NotFoundError, ValidatorError } from "../errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidatorError,
+} from "../errors";
 import {
   enforceRole,
   id,
@@ -127,7 +132,7 @@ export async function createRoute(req: Request, res: Response) {
   res.status(user.role === "admin" ? 201 : 202).json({ _id: quoteCreated._id });
 }
 
-function resolveAccess(quote: IQuote, isState: boolean, user: IUser) {
+function resolveAccess(quote: IQuote, user: IUser) {
   if (quote.state === "public") {
     // Quote is public, so only admins can change it
 
@@ -141,9 +146,6 @@ function resolveAccess(quote: IQuote, isState: boolean, user: IUser) {
     // If user is creator
     if (quote.createdBy.equals(user._id)) {
       // User is creator, so they can't change the state
-      if (isState) {
-        throw new ForbiddenError();
-      }
     } else if (
       !(
         user.role === "admin" ||
@@ -159,7 +161,6 @@ function resolveAccess(quote: IQuote, isState: boolean, user: IUser) {
 async function edit(
   id: unknown,
   user: IUser,
-  newState?: "public" | "pending",
   text?: string,
   context?: string,
   note?: string,
@@ -171,12 +172,9 @@ async function edit(
     throw new NotFoundError();
   }
 
-  resolveAccess(current, newState !== undefined, user);
+  resolveAccess(current, user);
+  // Edit the quotes
 
-  // Edit the quote
-  if (newState !== undefined) {
-    current.state = newState;
-  }
   // Text - change or nothing - don't change
   if (text !== undefined) {
     current.text = text;
@@ -214,12 +212,49 @@ export async function editRoute(req: Request, res: Response) {
   await edit(
     req.params.id,
     await enforceRole(req.headers.authorization, "user"),
-    await resolveState(req),
     stringOrUndefined(req.body.text),
     stringOrUndefined(req.body.context),
     stringOrUndefined(req.body.note),
     idOrUndefined(req.body.originator, "originator"),
     stringOrUndefined(req.body.class)
+  );
+  res.sendStatus(204);
+}
+
+async function state(state: "public" | "pending", id: unknown, user: IUser) {
+  const current = await Quote.findById(id);
+  if (current === null) {
+    throw new NotFoundError();
+  }
+
+  if (user.role !== "admin" && !user.class.equals(current.class || "")) {
+    throw new ForbiddenError();
+  }
+
+  if (state === "pending" && current.state === "public") {
+    throw new ConflictError("state");
+  }
+
+  if (current.state !== state) {
+    current.state = state;
+    current.approvedBy = user._id;
+    await current.save();
+  } else {
+    throw new ConflictError("state");
+  }
+  return;
+}
+
+export async function stateRoute(req: Request, res: Response) {
+  const stateStr = string(req.body.state, "state");
+  if (stateStr !== "public" && stateStr !== "pending") {
+    throw new ValidatorError("state", "state");
+  }
+
+  await state(
+    stateStr,
+    req.params.id,
+    await enforceRole(req.headers.authorization, "moderator")
   );
   res.sendStatus(204);
 }
