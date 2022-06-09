@@ -20,7 +20,7 @@ export async function getRoute(req: Request, res: Response) {
   res.json(reducedQuote);
 }
 
-export async function search(
+async function search(
   originator: Types.ObjectId | undefined,
   classId: Types.ObjectId | undefined,
   text: string | undefined,
@@ -74,7 +74,7 @@ export async function searchRoute(req: Request, res: Response) {
   res.json({ quotes: quotesFound }); // Send the found enteries
 }
 
-export async function create(
+async function create(
   user: IUser,
   text: string,
   originator: Types.ObjectId,
@@ -127,23 +127,8 @@ export async function createRoute(req: Request, res: Response) {
   res.status(user.role === "admin" ? 201 : 202).json({ _id: quoteCreated._id });
 }
 
-// TODO
-// eslint-disable-next-line sonarjs/cognitive-complexity
-export async function editRoute(req: Request, res: Response) {
-  const current = await Quote.findById(req.params.id);
-  if (current === null) {
-    throw new NotFoundError();
-  }
-  const newState = stringOrUndefined(req.body.state);
-  if (
-    newState !== undefined &&
-    newState !== "public" &&
-    newState !== "pending"
-  ) {
-    throw new ValidatorError("state", "state");
-  }
-  const user = await enforceRole(req.headers.authorization, "user");
-  if (current.state === "public") {
+function resolveAccess(quote: IQuote, isState: boolean, user: IUser) {
+  if (quote.state === "public") {
     // Quote is public, so only admins can change it
 
     // Throw error if user is not an admin
@@ -154,62 +139,87 @@ export async function editRoute(req: Request, res: Response) {
     // Quote is pending, so admins, moderators from the same class, and the author can change it
 
     // If user is creator
-    if (current.createdBy.equals(user._id)) {
+    if (quote.createdBy.equals(user._id)) {
       // User is creator, so they can't change the state
-      if (newState !== undefined) {
+      if (isState) {
         throw new ForbiddenError();
       }
     } else if (
       !(
         user.role === "admin" ||
-        (user.role === "moderator" && user.class.equals(current.class || ""))
+        (user.role === "moderator" && user.class.equals(quote.class || ""))
       )
     ) {
       // User isn't creator, an admin, or a moderator from same class
       throw new ForbiddenError();
     }
   }
+}
+
+async function edit(
+  id: unknown,
+  user: IUser,
+  newState?: "public" | "pending",
+  text?: string,
+  context?: string,
+  note?: string,
+  originator?: Types.ObjectId,
+  classString?: string
+) {
+  const current = await Quote.findById(id);
+  if (current === null) {
+    throw new NotFoundError();
+  }
+
+  resolveAccess(current, newState !== undefined, user);
 
   // Edit the quote
   if (newState !== undefined) {
     current.state = newState;
   }
   // Text - change or nothing - don't change
-  const text = stringOrUndefined(req.body.text);
   if (text !== undefined) {
     current.text = text;
   }
 
   // Id - change or nothing - don't change
-  const originator = idOrUndefined(req.body.originator, "originator");
   if (originator !== undefined) {
     current.originator = originator;
   }
 
   // Text - change, "" - unset, or nothing - don't change
-  const context = stringOrUndefined(req.body.context);
   if (context !== undefined) {
     current.context = context === "" ? undefined : context;
   }
 
   // Text - change, "" - unset, or nothing - don't change
-  const note = stringOrUndefined(req.body.note);
   if (current.note !== note) {
     current.note = note === "" ? undefined : note;
   }
 
   // Id - change, "" - unset, or nothing - don't change
-  const classString = stringOrUndefined(req.body.class);
   if (classString === "") {
     current.class = undefined;
   } else {
-    const classId = idOrUndefined(req.body.class, "class");
+    const classId = idOrUndefined(classString, "class");
     if (classId !== undefined) {
       current.class = classId;
     }
   }
 
-  await current.save();
+  return await current.save();
+}
 
+export async function editRoute(req: Request, res: Response) {
+  await edit(
+    req.params.id,
+    await enforceRole(req.headers.authorization, "user"),
+    await resolveState(req),
+    stringOrUndefined(req.body.text),
+    stringOrUndefined(req.body.context),
+    stringOrUndefined(req.body.note),
+    idOrUndefined(req.body.originator, "originator"),
+    stringOrUndefined(req.body.class)
+  );
   res.sendStatus(204);
 }
