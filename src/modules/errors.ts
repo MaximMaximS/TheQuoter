@@ -12,6 +12,8 @@ export function genValidatorMessage(path: string, kind: string) {
       return `${path} does not match the pattern`;
     case "ObjectId":
       return `${path} is not a valid ObjectId`;
+    case "state":
+      return `${path} can be only "pending" or "public"`;
     default:
       return `${path} is not valid (${kind})`;
   }

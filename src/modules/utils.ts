@@ -88,7 +88,7 @@ export function idOrUndefined(
     return undefined;
   }
   if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
-    throw new ValidatorError(path, "invalid");
+    throw new ValidatorError(path, "ObjectId");
   }
   return new Types.ObjectId(id);
 }
