@@ -1,4 +1,4 @@
-import { Router } from "express";
+import { Request, Response, Router } from "express";
 import asyncMiddleware from "middleware-async";
 import * as classes from "./routes/classes";
 import * as people from "./routes/people";
