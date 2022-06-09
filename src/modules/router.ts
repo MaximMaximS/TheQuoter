@@ -12,6 +12,7 @@ router
   .route("/users")
   // Register
   .post(asyncMiddleware(users.registerRoute))
+  .delete(asyncMiddleware(users.deleteRoute))
   .all(methodNotAllowed);
 
 router

@@ -83,3 +83,14 @@ export async function loginRoute(req: Request, res: Response) {
     token,
   });
 }
+
+// TODO
+export async function deleteRoute(req: Request, res: Response) {
+  const env = process.env.NODE_ENV || "production";
+  if (env === "production") {
+    throw new errors.NotFoundError();
+  }
+  const user = await login(req.body);
+  user.remove();
+  res.sendStatus(204);
+}
