@@ -1,257 +1,231 @@
 {
-	"info": {
-		"_postman_id": "afe6f3fb-339e-4cb6-8322-7fc91f813518",
-		"name": "Tests1",
-		"description": "New app for viewing and storing quotes of famous (and infamous) people",
-		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
-	},
-	"item": [
-		{
-			"name": "Register",
-			"id": "4e8821aa-f633-4bd1-9ec1-78477d2969c9",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"username\": \"<string>\",\n  \"email\": \"<string>\",\n  \"password\": \"<password>\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/users",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"users"
-					]
-				},
-				"description": "Allows anyone to register"
-			},
-			"response": [
-				{
-					"id": "9e3e6d38-33a1-4a63-86ab-65a46c20d014",
-					"name": "Successful operation",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"<string>\",\n  \"email\": \"<string>\",\n  \"password\": \"<password>\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/users",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"users"
-							]
-						}
-					},
-					"status": "Created",
-					"code": 201,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"cookie": [],
-					"responseTime": null,
-					"body": "{\n  \"token\": \"et exercitation nulla culpa voluptate\"\n}"
-				}
-			]
-		},
-		{
-			"name": "Logs user into the system",
-			"id": "d2b338bf-6c52-49aa-87f1-781daae6e5b4",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<password>\"\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/user/login",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"user",
-						"login"
-					]
-				},
-				"description": "Log in"
-			},
-			"response": [
-				{
-					"id": "b15243e4-fbdd-4b44-8ad7-b5d50bc262e3",
-					"name": "Successful operation",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<password>\"\n}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/user/login",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"user",
-								"login"
-							]
-						}
-					},
-					"status": "Created",
-					"code": 201,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"cookie": [],
-					"responseTime": null,
-					"body": "{\n  \"token\": \"et exercitation nulla culpa voluptate\"\n}"
-				}
-			]
-		},
-		{
-			"name": "Lists all classes",
-			"id": "90f8c505-4303-446d-85bf-99051c8e282e",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "POST",
-				"header": [
-					{
-						"key": "Content-Type",
-						"value": "application/json"
-					},
-					{
-						"key": "Accept",
-						"value": "application/json"
-					}
-				],
-				"body": {
-					"mode": "raw",
-					"raw": "{}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
-				},
-				"url": {
-					"raw": "{{baseUrl}}/classes",
-					"host": [
-						"{{baseUrl}}"
-					],
-					"path": [
-						"classes"
-					]
-				},
-				"description": "Classes Query"
-			},
-			"response": [
-				{
-					"id": "5f30e2de-14bb-4ffa-96f6-62a5b89b54c2",
-					"name": "Success",
-					"originalRequest": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "{}",
-							"options": {
-								"raw": {
-									"language": "json"
-								}
-							}
-						},
-						"url": {
-							"raw": "{{baseUrl}}/classes",
-							"host": [
-								"{{baseUrl}}"
-							],
-							"path": [
-								"classes"
-							]
-						}
-					},
-					"status": "OK",
-					"code": 200,
-					"_postman_previewlanguage": "json",
-					"header": [
-						{
-							"key": "Content-Type",
-							"value": "application/json"
-						}
-					],
-					"cookie": [],
-					"responseTime": null,
-					"body": "{\n  \"_id\": \"Lorem occaecat nostrud commodo dolore\",\n  \"name\": \"quis eiusmod magna aliqua\"\n}"
-				}
-			]
-		}
-	],
-	"variable": [
-		{
-			"id": "413980a2-36d1-4357-ba5d-e84c4a78d089",
-			"key": "baseUrl",
-			"value": "localhost:3000",
-			"type": "string"
-		}
-	]
+  "info": {
+    "_postman_id": "afe6f3fb-339e-4cb6-8322-7fc91f813518",
+    "name": "Tests1",
+    "description": "New app for viewing and storing quotes of famous (and infamous) people",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Register",
+      "id": "4e8821aa-f633-4bd1-9ec1-78477d2969c9",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"<string>\",\n  \"email\": \"<string>\",\n  \"password\": \"<password>\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/users",
+          "host": ["{{baseUrl}}"],
+          "path": ["users"]
+        },
+        "description": "Allows anyone to register"
+      },
+      "response": [
+        {
+          "id": "9e3e6d38-33a1-4a63-86ab-65a46c20d014",
+          "name": "Successful operation",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"<string>\",\n  \"email\": \"<string>\",\n  \"password\": \"<password>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n  \"token\": \"et exercitation nulla culpa voluptate\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Logs user into the system",
+      "id": "d2b338bf-6c52-49aa-87f1-781daae6e5b4",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<password>\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/user/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["user", "login"]
+        },
+        "description": "Log in"
+      },
+      "response": [
+        {
+          "id": "b15243e4-fbdd-4b44-8ad7-b5d50bc262e3",
+          "name": "Successful operation",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"<string>\",\n  \"password\": \"<password>\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/user/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["user", "login"]
+            }
+          },
+          "status": "Created",
+          "code": 201,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n  \"token\": \"et exercitation nulla culpa voluptate\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "Lists all classes",
+      "id": "90f8c505-4303-446d-85bf-99051c8e282e",
+      "protocolProfileBehavior": {
+        "disableBodyPruning": true
+      },
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/classes",
+          "host": ["{{baseUrl}}"],
+          "path": ["classes"]
+        },
+        "description": "Classes Query"
+      },
+      "response": [
+        {
+          "id": "5f30e2de-14bb-4ffa-96f6-62a5b89b54c2",
+          "name": "Success",
+          "originalRequest": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/classes",
+              "host": ["{{baseUrl}}"],
+              "path": ["classes"]
+            }
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json"
+            }
+          ],
+          "cookie": [],
+          "responseTime": null,
+          "body": "{\n  \"_id\": \"Lorem occaecat nostrud commodo dolore\",\n  \"name\": \"quis eiusmod magna aliqua\"\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "id": "413980a2-36d1-4357-ba5d-e84c4a78d089",
+      "key": "baseUrl",
+      "value": "localhost:3000",
+      "type": "string"
+    }
+  ]
 }

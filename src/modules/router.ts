@@ -1,134 +1,73 @@
-import express, { Request, Response } from "express";
+import { Router } from "express";
 import asyncMiddleware from "middleware-async";
-import { enforceRole, getUser, methodNotAllowed } from "./middleware";
-import { extractFromUnknownObject } from "./utils";
-import * as users from "./routes/users";
 import * as classes from "./routes/classes";
 import * as people from "./routes/people";
 import * as quotes from "./routes/quotes";
-import { IncorrectLoginError, ServerError } from "./errors";
-import { Types } from "mongoose";
+import * as users from "./routes/users";
+import { methodNotAllowed } from "./middleware";
 
-const router = express.Router();
+const router = Router();
 
-// Users Register
 router
   .route("/users")
-  .post(
-    asyncMiddleware(async (req: Request, res: Response) => {
-      const user = await users.register(req.body);
-      const token = users.getToken(user);
-      res.status(201).json({
-        token,
-      });
-    })
-  )
+  // Register
+  .post(asyncMiddleware(users.registerRoute))
+  .delete(asyncMiddleware(users.deleteRoute))
   .all(methodNotAllowed);
 
-// Users Login
 router
   .route("/users/login")
-  .post(
-    asyncMiddleware(async (req: Request, res: Response) => {
-      const user = await users.login(req.body);
-      const token = users.getToken(user);
-      res.json({
-        token,
-      });
-    })
-  )
+  // Login
+  .post(asyncMiddleware(users.loginRoute))
   .all(methodNotAllowed);
 
-// Classes
 router
   .route("/classes")
-  .get(
-    asyncMiddleware(async (req: Request, res: Response) => {
-      const classesFound = await classes.search(
-        extractFromUnknownObject(req.query, "name")
-      );
-      res.json({ classes: classesFound });
-    })
-  )
-  .post(
-    asyncMiddleware(enforceRole("admin")),
-    asyncMiddleware(async (req: Request, res: Response) => {
-      const classCreated = await classes.create(
-        req.body.name,
-        await getUser(req.headers.authorization)
-      );
-      res.status(201).json(classCreated);
-    })
-  )
+  // Search classes
+  .get(asyncMiddleware(classes.searchRoute))
+  // Create class
+  .post(asyncMiddleware(classes.createRoute))
   .all(methodNotAllowed);
 
-// People
+router
+  .route("/classes/:id")
+  // Get class
+  .get(asyncMiddleware(classes.getRoute))
+  .all(methodNotAllowed);
+
 router
   .route("/people")
-  .get(
-    // Query people
-    asyncMiddleware(async (req: Request, res: Response) => {
-      const peopleFound = await people.search(
-        extractFromUnknownObject(req.query, "name"),
-        extractFromUnknownObject(req.query, "type")
-      );
-      res.json({ people: peopleFound });
-    })
-  )
-  .post(
-    // New person
-    asyncMiddleware(enforceRole("admin")),
-    asyncMiddleware(async (req: Request, res: Response) => {
-      const personCreated = await people.create(
-        req.body.name,
-        req.body.type,
-        req.user
-      );
-      res.status(201).json(personCreated);
-    })
-  )
+  // Search people
+  .get(asyncMiddleware(people.searchRoute))
+  // Create person
+  .post(asyncMiddleware(people.createRoute))
   .all(methodNotAllowed);
 
-// Quotes
+router
+  .route("/people/:id")
+  // Get person
+  .get(asyncMiddleware(people.getRoute))
+  .all(methodNotAllowed);
+
 router
   .route("/quotes")
-  .get(
-    // Query
-    asyncMiddleware(enforceRole("user")),
-    asyncMiddleware(async (req: Request, res: Response) => {
-      let state = req.query.state;
-      // Approved is fine, but if it's not, we need to check if the user is an admin
-      if (state !== "approved") {
-        if (typeof state !== "string") {
-          state = "approved";
-        } else {
-          if (req.user === null) {
-            throw new ServerError("This should never happen");
-          }
-          // TODO: Permissions
-          throw new IncorrectLoginError();
-        }
-      }
+  // Search quotes
+  .get(asyncMiddleware(quotes.searchRoute))
+  // Create quote
+  .post(asyncMiddleware(quotes.createRoute))
+  .all(methodNotAllowed);
 
-      // Parsing the query
-      const originatorId =
-        typeof req.query.originator === "string" ? req.query.originator : null;
+router
+  .route("/quotes/:id")
+  // Get quote
+  .get(asyncMiddleware(quotes.getRoute))
+  // Edit quote
+  .put(asyncMiddleware(quotes.editRoute))
+  .all(methodNotAllowed);
 
-      const classId =
-        typeof req.query.class === "string" ? req.query.class : null;
-
-      const text = typeof req.query.text === "string" ? req.query.text : null;
-
-      const quotesFound = await quotes.search(
-        originatorId !== null ? new Types.ObjectId(originatorId) : null,
-        classId !== null ? new Types.ObjectId(classId) : null,
-        text,
-        state
-      );
-
-      res.json({ quotes: quotesFound }); // Send the found enteries
-    })
-  )
+router
+  .route("/quotes/:id/state")
+  .post(asyncMiddleware(quotes.stateRoute))
   .all(methodNotAllowed);
 
 // It's 5!

@@ -3,5 +3,13 @@
   "tabWidth": 2,
   "semi": true,
   "arrowParens": "always",
-  "bracketSameLine": true
+  "bracketSameLine": true,
+  "importOrder": [
+    "<THIRD_PARTY_MODULES>",
+    "modules/(.*)$",
+    "models/(.*)$",
+    "routes/(.*)$",
+    "^[.]"
+  ],
+  "importOrderSortSpecifiers": true
 }

@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
+import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
 import * as errors from "../errors";
-const saltRounds = 12;
 
+const saltRounds = 12;
 // Generate a JWT for the user
 export function getToken(user: IUser) {
   if (process.env.JWT_SECRET === undefined) {
@@ -11,6 +12,42 @@ export function getToken(user: IUser) {
   }
   return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
     expiresIn: "1d",
+  });
+}
+
+export interface IRegisterBody {
+  email?: string;
+  username?: string;
+  password?: string;
+  class?: string;
+}
+
+export async function register(body: IRegisterBody): Promise<IUser> {
+  const { password, username, email } = body;
+  if (typeof password !== "string") {
+    throw new errors.ValidatorError("password", "required");
+  }
+  if (password.length < 6) {
+    throw new errors.ValidatorError("password", "minlength");
+  }
+
+  // Hash password
+  const hash = await bcrypt.hash(password, saltRounds);
+
+  // Create user
+  return await User.create({
+    username,
+    hash,
+    email,
+    class: body.class,
+  });
+}
+
+export async function registerRoute(req: Request, res: Response) {
+  const user = await register(req.body);
+  const token = getToken(user);
+  res.status(201).json({
+    token,
   });
 }
 
@@ -39,31 +76,21 @@ export async function login(body: ILoginBody): Promise<IUser> {
   return user;
 }
 
-export interface IRegisterBody {
-  email?: string;
-  username?: string;
-  password?: string;
-  class?: string;
+export async function loginRoute(req: Request, res: Response) {
+  const user = await login(req.body);
+  const token = getToken(user);
+  res.json({
+    token,
+  });
 }
 
-export async function register(body: IRegisterBody): Promise<IUser> {
-  const { password } = body;
-  if (typeof password !== "string") {
-    throw new errors.ValidatorError("password", "required");
+// TODO
+export async function deleteRoute(req: Request, res: Response) {
+  const env = process.env.NODE_ENV || "production";
+  if (env === "production") {
+    throw new errors.NotFoundError();
   }
-  if (password.length < 6) {
-    throw new errors.ValidatorError("password", "minlength");
-  }
-
-  // Hash password
-  const hash = await bcrypt.hash(password, saltRounds);
-
-  // Create user
-  const user = await User.create({
-    username: body.username,
-    hash,
-    email: body.email,
-    class: body.class,
-  });
-  return user;
+  const user = await login(req.body);
+  user.remove();
+  res.sendStatus(204);
 }
