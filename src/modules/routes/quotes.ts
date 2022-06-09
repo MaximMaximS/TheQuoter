@@ -258,3 +258,17 @@ export async function stateRoute(req: Request, res: Response) {
   );
   res.sendStatus(204);
 }
+
+async function random() {
+  // Get random quote
+  const quotes = await Quote.find({
+    state: "public",
+    class: { $exists: false },
+  });
+  return quotes[Math.floor(Math.random() * quotes.length)];
+}
+
+export async function randomRoute(req: Request, res: Response) {
+  const quote = await random();
+  res.json(await quote.reduce());
+}

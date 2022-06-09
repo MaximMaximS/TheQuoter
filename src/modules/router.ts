@@ -58,6 +58,11 @@ router
   .all(methodNotAllowed);
 
 router
+  .route("/quotes/random")
+  .get(asyncMiddleware(quotes.randomRoute))
+  .all(methodNotAllowed);
+
+router
   .route("/quotes/:id")
   // Get quote
   .get(asyncMiddleware(quotes.getRoute))
