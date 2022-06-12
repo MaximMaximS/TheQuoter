@@ -5,7 +5,7 @@
   "main": "./dist/server.js",
   "scripts": {
     "prepare": "husky install",
-    "dev": "nodemon ./src/server.ts",
+    "dev": "nodemon -w ./src ./src/server.ts",
     "build": "tsc -p ./tsconfig.json",
     "start": "node ./dist/server.js",
     "docker": "tsc -p ./tsconfig.json && docker build -f Dockerfile . -t maximmaxims/thequoter"
@@ -28,7 +28,7 @@
     "@types/jsonwebtoken": "^8.5.8",
     "@types/mongoose-id-validator": "^0.6.3",
     "@types/mongoose-unique-validator": "^1.0.6",
-    "@types/node": "^17.0.41",
+    "@types/node": "^17.0.42",
     "@typescript-eslint/eslint-plugin": "^5.27.1",
     "@typescript-eslint/parser": "^5.27.1",
     "eslint": "^8.17.0",
