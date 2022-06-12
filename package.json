@@ -8,7 +8,7 @@
     "dev": "nodemon -w ./src ./src/server.ts",
     "build": "tsc -p ./tsconfig.json",
     "start": "node ./dist/server.js",
-    "docker": "tsc -p ./tsconfig.json && docker build -f Dockerfile . -t maximmaxims/thequoter"
+    "docker": "tsc -p ./tsconfig.json && docker build . -f Dockerfile . -t maximmaxims/thequoter"
   },
   "repository": {
     "type": "git",
