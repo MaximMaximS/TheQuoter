@@ -1,11 +1,17 @@
-FROM node:18-alpine3.14
-WORKDIR /srv
-ENV NODE_ENV production
+FROM node:18-alpine
+
+WORKDIR /usr/src/app
+
+ENV NODE_ENV=production
+
 COPY ./package*.json ./
+
 RUN apk add --no-cache make gcc g++ python3 && \
-    npm ci --production --ignore-scripts && npm cache clean --force && \
+    npm ci --omit=dev --ignore-scripts && \
     npm rebuild bcrypt --build-from-source && \
+    npm cache clean --force && \
     apk del make gcc g++ python3
-RUN npm i -g nodemon
-COPY . ./
-CMD npm start
+
+COPY ./ ./
+
+CMD ["npm", "start"]

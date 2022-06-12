@@ -1,9 +1,4 @@
-node_modules
-npm-debug.log
-src
-postman
+*
 
-.env
-
-tsconfig.json
-README.md
+!/package*.json
+!/dist
