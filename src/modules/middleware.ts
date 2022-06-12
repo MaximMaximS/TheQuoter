@@ -7,8 +7,7 @@ import {
 import mongoose from "mongoose";
 import * as errors from "./errors";
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
+export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   if (err instanceof errors.ValidatorError) {
     res.status(400).json({
       message: err.message,
@@ -31,7 +30,7 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, _next) => {
       kind: first.kind,
     });
   } else if (err instanceof errors.NotFoundError) {
-    res.sendStatus(404);
+    next();
   } else if (err instanceof errors.ForbiddenError) {
     res.sendStatus(403);
   } else if (err instanceof errors.ConflictError) {
@@ -49,5 +48,4 @@ export function notFound(req: Request, res: Response) {
 
 export function methodNotAllowed(req: Request, res: Response) {
   res.sendStatus(405);
-  console.log("Not allowed API call...");
 }

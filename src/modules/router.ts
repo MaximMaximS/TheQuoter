@@ -4,6 +4,7 @@ import * as classes from "./routes/classes";
 import * as people from "./routes/people";
 import * as quotes from "./routes/quotes";
 import * as users from "./routes/users";
+import { NotFoundError } from "./errors";
 import { methodNotAllowed } from "./middleware";
 
 const router = Router();
@@ -58,6 +59,11 @@ router
   .all(methodNotAllowed);
 
 router
+  .route("/quotes/random")
+  .get(asyncMiddleware(quotes.randomRoute))
+  .all(methodNotAllowed);
+
+router
   .route("/quotes/:id")
   // Get quote
   .get(asyncMiddleware(quotes.getRoute))
@@ -76,13 +82,18 @@ router.route("/its5").all((req: Request, res: Response) => {
 });
 
 router.route("/echo").all((req: Request, res: Response) => {
-  res.status(200).send(req.body !== null ? req.body : req.query.message);
-  console.log(
-    "Echoing:",
-    req.body !== null ? req.body : req.query.message,
-    "from",
-    req.headers.origin
-  );
+  const env = process.env.NODE_ENV || "production";
+  if (env === "production") {
+    throw new NotFoundError();
+  }
+  const msg =
+    typeof req.body.message === "string"
+      ? req.body.message
+      : typeof req.query.message === "string"
+      ? req.query.message
+      : "Hello World!";
+
+  res.type("text/plain").send(msg);
 });
 
 export default router;
