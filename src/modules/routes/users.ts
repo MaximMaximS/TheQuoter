@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
 import * as errors from "../errors";
+import { enforceRole } from "../utils";
 
 const saltRounds = 12;
 // Generate a JWT for the user
@@ -82,6 +83,18 @@ export async function loginRoute(req: Request, res: Response) {
   res.json({
     token,
   });
+}
+
+export async function getRoute(req: Request, res: Response) {
+  const cUser = await enforceRole(req.headers.authorization, "user");
+  const user = await User.findById(req.params.id);
+  if (user === null) {
+    throw new errors.NotFoundError();
+  }
+  if (!user._id.equals(cUser._id) && cUser.role !== "admin") {
+    throw new errors.ForbiddenError();
+  }
+  res.json(user.reduce());
 }
 
 // TODO

@@ -25,7 +25,7 @@ export async function search(name: string | undefined) {
 
 export async function searchRoute(req: Request, res: Response) {
   const classesFound = await search(stringOrUndefined(req.query.name));
-  res.json({ classes: classesFound });
+  res.json(classesFound);
 }
 
 export async function create(name: string, user: IUser) {

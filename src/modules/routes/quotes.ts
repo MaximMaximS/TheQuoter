@@ -76,7 +76,7 @@ export async function searchRoute(req: Request, res: Response) {
     state
   );
 
-  res.json({ quotes: quotesFound }); // Send the found enteries
+  res.json(quotesFound); // Send the found enteries
 }
 
 async function create(

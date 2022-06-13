@@ -16,6 +16,8 @@ router
   .delete(asyncMiddleware(users.deleteRoute))
   .all(methodNotAllowed);
 
+router.route("/users/:id").get(asyncMiddleware(users.getRoute));
+
 router
   .route("/users/login")
   // Login
