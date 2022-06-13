@@ -86,14 +86,14 @@ router.route("/echo").all((req: Request, res: Response) => {
   if (env === "production") {
     throw new NotFoundError();
   }
-  const msg =
+  const message =
     typeof req.body.message === "string"
       ? req.body.message
       : typeof req.query.message === "string"
       ? req.query.message
       : "Hello World!";
 
-  res.type("text/plain").send(msg);
+  res.json({ message });
 });
 
 export default router;
