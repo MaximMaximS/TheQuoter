@@ -49,6 +49,7 @@ export async function registerRoute(req: Request, res: Response) {
   const token = getToken(user);
   res.status(201).json({
     token,
+    user: user.reduce(),
   });
 }
 
@@ -82,6 +83,7 @@ export async function loginRoute(req: Request, res: Response) {
   const token = getToken(user);
   res.json({
     token,
+    user: user.reduce(),
   });
 }
 

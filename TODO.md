@@ -2,7 +2,6 @@
 
 ## Planned
 
-- [ ] Implement getUser by token
 - [ ] Add loging
 - [ ] Add dialogs
 - [ ] Finish moderator settings
@@ -18,3 +17,4 @@
 ## Done ✓
 
 - [x] Quote editing
+- [x] Return user document when logging in
