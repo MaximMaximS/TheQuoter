@@ -2,6 +2,7 @@
 
 ## Planned
 
+- [ ] Implement getUser by token
 - [ ] Add loging
 - [ ] Add dialogs
 - [ ] Finish moderator settings
