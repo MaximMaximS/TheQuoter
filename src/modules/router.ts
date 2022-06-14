@@ -1,10 +1,10 @@
-import { Request, Response, Router } from "express";
+import { Router } from "express";
 import asyncMiddleware from "middleware-async";
 import * as classes from "./routes/classes";
+import * as misc from "./routes/misc";
 import * as people from "./routes/people";
 import * as quotes from "./routes/quotes";
 import * as users from "./routes/users";
-import { NotFoundError } from "./errors";
 import { methodNotAllowed } from "./middleware";
 
 const router = Router();
@@ -13,6 +13,7 @@ router
   .route("/users")
   // Register
   .post(asyncMiddleware(users.registerRoute))
+  // Delete OWN user (development only)
   .delete(asyncMiddleware(users.deleteRoute))
   .all(methodNotAllowed);
 
@@ -26,7 +27,7 @@ router
   .route("/classes")
   // Search classes
   .get(asyncMiddleware(classes.searchRoute))
-  // Create class
+  // Create a class
   .post(asyncMiddleware(classes.createRoute))
   .all(methodNotAllowed);
 
@@ -60,40 +61,28 @@ router
 
 router
   .route("/quotes/random")
+  // Get random quote
   .get(asyncMiddleware(quotes.randomRoute))
   .all(methodNotAllowed);
 
 router
   .route("/quotes/:id")
-  // Get quote
+  // Get a quote by id
   .get(asyncMiddleware(quotes.getRoute))
-  // Edit quote
+  // Edit a quote
   .put(asyncMiddleware(quotes.editRoute))
   .all(methodNotAllowed);
 
 router
   .route("/quotes/:id/state")
+  // Publish (TODO: change to publish)
   .post(asyncMiddleware(quotes.stateRoute))
   .all(methodNotAllowed);
 
 // It's 5!
-router.route("/its5").all((req: Request, res: Response) => {
-  res.status(418).send("I'm a teapot");
-});
+router.route("/its5").all(misc.its5Route);
 
-router.route("/echo").all((req: Request, res: Response) => {
-  const env = process.env.NODE_ENV || "production";
-  if (env === "production") {
-    throw new NotFoundError();
-  }
-  const message =
-    typeof req.body.message === "string"
-      ? req.body.message
-      : typeof req.query.message === "string"
-      ? req.query.message
-      : "Hello World!";
-
-  res.json({ message });
-});
+// Echo (development only)
+router.route("/echo").all(misc.echoRoute);
 
 export default router;
