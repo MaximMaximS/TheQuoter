@@ -6,11 +6,11 @@
   "scripts": {
     "prepare": "husky install",
     "dev": "nodemon -w ./src ./src/server.ts",
-    "build": "tsc -p ./tsconfig.json",
+    "build": "tsc -p ./tsconfig.build.json",
     "start": "npm run build && node ./dist/server.js",
     "format": "prettier --write . --ignore-unknown",
     "lint": "eslint --ext .ts ./src",
-    "docker": "tsc -p ./tsconfig.json && docker build . -f Dockerfile . -t maximmaxims/thequoter",
+    "docker": "tsc -p ./tsconfig.build.json && docker build . -f Dockerfile . -t maximmaxims/thequoter",
     "test": "jest"
   },
   "repository": {
@@ -47,6 +47,7 @@
     "husky": "^8.0.1",
     "jest": "^28.1.1",
     "lint-staged": "^13.0.1",
+    "mongodb-memory-server": "^8.6.0",
     "nodemon": "^2.0.16",
     "prettier": "2.6.2",
     "supertest": "^6.2.3",
