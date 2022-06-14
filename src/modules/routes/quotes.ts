@@ -272,3 +272,20 @@ export async function randomRoute(req: Request, res: Response) {
   const quote = await random();
   res.json(await quote.reduce());
 }
+
+// Quote must be users own pending quote or user must be admin
+export async function deleteRoute(req: Request, res: Response) {
+  const user = await enforceRole(req.headers.authorization, "user");
+  const quote = await Quote.findById(req.params.id);
+  if (quote === null) {
+    throw new NotFoundError();
+  }
+  if (
+    user.role !== "admin" &&
+    (quote.state !== "pending" || !quote.createdBy.equals(user._id))
+  ) {
+    throw new ForbiddenError();
+  }
+  await quote.remove();
+  res.sendStatus(204);
+}

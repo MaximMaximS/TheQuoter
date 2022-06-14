@@ -84,7 +84,6 @@ export async function loginRoute(req: Request, res: Response) {
   });
 }
 
-// TODO
 export async function deleteRoute(req: Request, res: Response) {
   if (process.env.NODE_ENV !== "development") {
     throw new NotFoundError();

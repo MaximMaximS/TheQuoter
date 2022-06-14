@@ -71,6 +71,8 @@ router
   .get(asyncMiddleware(quotes.getRoute))
   // Edit a quote
   .put(asyncMiddleware(quotes.editRoute))
+  // Delete a quote
+  .delete(asyncMiddleware(quotes.deleteRoute))
   .all(methodNotAllowed);
 
 router
