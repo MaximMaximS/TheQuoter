@@ -32,7 +32,7 @@ export async function searchRoute(req: Request, res: Response) {
     stringOrUndefined(req.query.name),
     stringOrUndefined(req.query.type)
   );
-  res.json({ people: peopleFound });
+  res.json(peopleFound);
 }
 
 export async function create(name: string, type: string, user: Types.ObjectId) {

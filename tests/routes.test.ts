@@ -1,26 +1,31 @@
 import request from "supertest";
 import app from "../src/modules/app";
-import * as dbHandler from "./db";
+import { clearDatabase, closeDatabase, createPeople, init } from "./db";
 
 beforeAll(async () => {
-  await dbHandler.connect();
+  await init();
 });
 
 afterEach(async () => {
-  await dbHandler.clearDatabase();
+  await clearDatabase();
 });
 
 afterAll(async () => {
-  await dbHandler.closeDatabase();
+  await closeDatabase();
 });
 
 describe("people", () => {
-  test("GET /people", (done) => {
-    // Expect empty array
-    request(app)
+  test("GET /people", async () => {
+    await createPeople();
+    // Expect empty array json
+
+    const res = await request(app)
       .get("/people")
       .expect("Content-Type", /json/)
-      .expect(200)
-      .end(done);
+      .expect(200);
+
+    // Expect array of people
+    expect(res.body).toHaveLength(1);
+    expect(res.body[0].name).toBe("teacher");
   });
 });

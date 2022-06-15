@@ -45,7 +45,8 @@
     "import/no-namespace": "off",
     "no-console": "off",
     "sonarjs/no-redundant-jump": "off",
-    "no-unneeded-ternary": "error"
+    "no-unneeded-ternary": "error",
+    "sonarjs/no-duplicate-string": "off"
   },
   "ignorePatterns": ["**/node_modules/**", "**/dist/**"]
 }
