@@ -1,17 +1,3 @@
-/*
-// Used in some cases where linter complains about extracting from unknown type
-export function extractFromUnknownObject(obj: unknown, key: string): unknown {
-  if (isObject(obj)) {
-    return obj[key as keyof typeof obj];
-  }
-  return null;
-}
-
-// Check if the unknown is an object
-export function isObject(obj: unknown): obj is object {
-  return typeof obj === "object" && !Array.isArray(obj) && obj !== null;
-}
-*/
 import { verify } from "jsonwebtoken";
 import { Types } from "mongoose";
 import User from "./models/user";
@@ -23,7 +9,7 @@ import {
 } from "./errors";
 
 // Get user from authorization header
-export async function getUser(authHeader: string | undefined) {
+export async function getUser(authHeader?: string) {
   if (authHeader !== undefined) {
     // Slice off Bearer prefix
     const token = authHeader.split(" ")[1];
@@ -66,7 +52,7 @@ export async function enforceRole(
   return user;
 }
 
-export function stringOrUndefined(str: unknown): string | undefined {
+export function stringOrUndefined(str?: unknown): string | undefined {
   if (typeof str === "string") {
     return str;
   }
@@ -84,21 +70,20 @@ export function idOrUndefined(
   id: unknown,
   path: string
 ): Types.ObjectId | undefined {
-  if (id === undefined) {
+  const soru = stringOrUndefined(id);
+  if (soru === undefined) {
     return undefined;
   }
-  if (typeof id !== "string" || !Types.ObjectId.isValid(id)) {
+  if (!Types.ObjectId.isValid(soru)) {
     throw new ValidatorError(path, "ObjectId");
   }
-  return new Types.ObjectId(id);
+  return new Types.ObjectId(soru);
 }
 
-export function id(id: string | undefined, path: string): Types.ObjectId {
-  if (id === undefined) {
-    throw new ValidatorError(path, "required");
-  }
-  if (!Types.ObjectId.isValid(id)) {
+export function id(id: unknown, path: string): Types.ObjectId {
+  const soru = string(id, path);
+  if (!Types.ObjectId.isValid(soru)) {
     throw new ValidatorError(path, "ObjectId");
   }
-  return new Types.ObjectId(id);
+  return new Types.ObjectId(soru);
 }

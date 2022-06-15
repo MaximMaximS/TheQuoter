@@ -2,6 +2,14 @@ import { Document, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
+export interface IReducedUser {
+  _id: Types.ObjectId;
+  username: string;
+  email: string;
+  role: "admin" | "moderator" | "user";
+  class: Types.ObjectId;
+}
+
 export interface IUser extends Document {
   username: string;
   hash: string;
@@ -10,6 +18,8 @@ export interface IUser extends Document {
   class: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+
+  reduce(): IReducedUser;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -45,7 +55,6 @@ const UserSchema = new Schema<IUser>(
     class: {
       type: Schema.Types.ObjectId,
       ref: "Class",
-      required: true,
     },
   },
   { timestamps: true }
@@ -53,5 +62,15 @@ const UserSchema = new Schema<IUser>(
 
 UserSchema.plugin(uniqueValidator);
 UserSchema.plugin(idValidator);
+
+UserSchema.methods.reduce = function (): IReducedUser {
+  return {
+    _id: this._id,
+    username: this.username,
+    email: this.email,
+    role: this.role,
+    class: this.class,
+  };
+};
 
 export default model("User", UserSchema, "users");

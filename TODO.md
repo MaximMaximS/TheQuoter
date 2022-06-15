@@ -2,12 +2,13 @@
 
 ## Planned
 
-- [ ] Add loging
+- [ ] Add logging
 - [ ] Add dialogs
-- [ ] Finish moderator settings
+- [ ] Properly implement moderator role
 - [ ] Reactions
   - [ ] Likes and dislikes
   - [ ] Comments
+- [ ] Single Sign on / Sign in with Google
 
 ## In Progress
 
@@ -16,3 +17,4 @@
 ## Done ✓
 
 - [x] Quote editing
+- [x] Return user document when logging in

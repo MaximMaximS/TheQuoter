@@ -41,11 +41,12 @@
     "unicorn/prevent-abbreviations": "off",
     "node/no-unsupported-features/es-syntax": "off",
     "node/no-missing-import": "off",
+    "node/no-unpublished-import": "off",
     "import/no-namespace": "off",
     "no-console": "off",
-    "no-shadow": "off",
     "sonarjs/no-redundant-jump": "off",
-    "no-unneeded-ternary": "error"
+    "no-unneeded-ternary": "error",
+    "sonarjs/no-duplicate-string": "off"
   },
   "ignorePatterns": ["**/node_modules/**", "**/dist/**"]
 }
