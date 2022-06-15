@@ -2,8 +2,13 @@ import bcrypt from "bcrypt";
 import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
-import * as errors from "../errors";
-import { enforceRole } from "../utils";
+import {
+  ForbiddenError,
+  IncorrectLoginError,
+  NotFoundError,
+  ValidatorError,
+} from "../errors";
+import { enforceRole, id } from "../utils";
 
 const saltRounds = 12;
 // Generate a JWT for the user
@@ -26,10 +31,10 @@ export interface IRegisterBody {
 export async function register(body: IRegisterBody): Promise<IUser> {
   const { password, username, email } = body;
   if (typeof password !== "string") {
-    throw new errors.ValidatorError("password", "required");
+    throw new ValidatorError("password", "required");
   }
   if (password.length < 6) {
-    throw new errors.ValidatorError("password", "minlength");
+    throw new ValidatorError("password", "minlength");
   }
 
   // Hash password
@@ -40,7 +45,7 @@ export async function register(body: IRegisterBody): Promise<IUser> {
     username,
     hash,
     email,
-    class: body.class,
+    class: id(body.class, "class"),
   });
 }
 
@@ -62,18 +67,18 @@ export interface ILoginBody {
 export async function login(body: ILoginBody): Promise<IUser> {
   // Check if <email or username> and <password> is provided
   if ((!body.email && !body.username) || !body.password) {
-    throw new errors.IncorrectLoginError();
+    throw new IncorrectLoginError();
   }
   const user = await User.findOne({
     $or: [{ email: { $eq: body.email } }, { username: { $eq: body.username } }],
   });
   if (user === null) {
-    throw new errors.IncorrectLoginError();
+    throw new IncorrectLoginError();
   }
   // Verify password
   const result = await bcrypt.compare(body.password, user.hash);
   if (!result) {
-    throw new errors.IncorrectLoginError();
+    throw new IncorrectLoginError();
   }
   return user;
 }
@@ -91,19 +96,18 @@ export async function getRoute(req: Request, res: Response) {
   const cUser = await enforceRole(req.headers.authorization, "user");
   const user = await User.findById(req.params.id);
   if (user === null) {
-    throw new errors.NotFoundError();
+    throw new NotFoundError();
   }
   if (!user._id.equals(cUser._id) && cUser.role !== "admin") {
-    throw new errors.ForbiddenError();
+    throw new ForbiddenError();
   }
   res.json(user.reduce());
 }
 
 // TODO
 export async function deleteRoute(req: Request, res: Response) {
-  const env = process.env.NODE_ENV || "production";
-  if (env === "production") {
-    throw new errors.NotFoundError();
+  if (process.env.NODE_ENV !== "development") {
+    throw new NotFoundError();
   }
   const user = await login(req.body);
   user.remove();

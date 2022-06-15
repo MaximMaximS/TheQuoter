@@ -2,9 +2,9 @@
 
 ## Planned
 
-- [ ] Add loging
+- [ ] Add logging
 - [ ] Add dialogs
-- [ ] Finish moderator settings
+- [ ] Properly implement moderator role
 - [ ] Reactions
   - [ ] Likes and dislikes
   - [ ] Comments

@@ -1,4 +1,4 @@
-name: Build
+name: Test and Build
 
 on:
   push:
@@ -9,8 +9,7 @@ on:
     - cron: "30 5 * * 1"
 
 jobs:
-  build:
-    name: Run build
+  test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -25,6 +24,14 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Run tests
+        run: npm test
+
+  build:
+    name: Run build
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
       - name: Build
         run: npm run build
 

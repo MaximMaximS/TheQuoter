@@ -1,5 +1,5 @@
 {
-  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.tsdk": "./node_modules/typescript/lib",
   "yaml.schemas": {
     "https://json.schemastore.org/github-workflow.json": "file:///home/maxim/Coding/TheQuoter/.github/workflows/build.yml"
   }
