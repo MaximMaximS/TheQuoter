@@ -45,7 +45,6 @@ const UserSchema = new Schema<IUser>(
     class: {
       type: Schema.Types.ObjectId,
       ref: "Class",
-      required: true,
     },
   },
   { timestamps: true }

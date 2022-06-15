@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
 import { IncorrectLoginError, NotFoundError, ValidatorError } from "../errors";
+import { id } from "../utils";
 
 const saltRounds = 12;
 // Generate a JWT for the user
@@ -39,7 +40,7 @@ export async function register(body: IRegisterBody): Promise<IUser> {
     username,
     hash,
     email,
-    class: body.class,
+    class: id(body.class, "class"),
   });
 }
 
