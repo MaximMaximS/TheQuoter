@@ -1,22 +1,22 @@
-name: Build and push to Docker Hub
+name: CI/CD
 
 on:
-  push:
-    branches: ["main"]
+  create:
+    tags:
+      - "*"
 
 jobs:
-  prod-build:
+  cd:
     name: Build and push to Docker Hub
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        node-version: [18.x]
     steps:
-      - name: Checkout
+      - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Setup node
+        uses: actions/setup-node@v3
         with:
-          node-version: ${{ matrix.node-version }}
-          cache: "npm"
+          node-version: latest
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v2
@@ -30,15 +30,21 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Get the tag name
+        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Build
+      - name: Run tests
+        run: npm test
+
+      - name: Build app
         run: npm run build
 
-      - name: Build and push
+      - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
-          tags: maximmaxims/thequoter:latest
+          tags: maximmaxims/thequoter:${{ env.TAG }}

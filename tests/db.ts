@@ -46,6 +46,8 @@ export async function createUsers() {
   });
 }
 
+export const classId = new mongoose.Types.ObjectId();
+
 export async function createClasses() {
   await createUsers();
   const admin = await User.findOne({ username: "admin" });
@@ -53,6 +55,7 @@ export async function createClasses() {
     throw new Error("admin is null");
   }
   await Class.create({
+    _id: classId,
     name: "Class 1",
     createdBy: admin._id,
   });

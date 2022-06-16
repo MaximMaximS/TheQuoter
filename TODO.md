@@ -12,9 +12,8 @@
 
 ## In Progress
 
-- [ ] Write something in README.md
-
 ## Done ✓
 
 - [x] Quote editing
 - [x] Return user document when logging in
+- [x] Write something in README.md
