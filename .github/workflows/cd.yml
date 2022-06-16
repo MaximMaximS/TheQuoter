@@ -30,6 +30,9 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Get the tag name
+        run: echo "TAG=${GITHUB_REF/refs\/tags\//}" >> $GITHUB_ENV
+
       - name: Install dependencies
         run: npm ci
 
@@ -44,4 +47,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: maximmaxims/thequoter:$(git log -1 --format=%h)
+          tags: maximmaxims/thequoter:${{ env.TAG }}
