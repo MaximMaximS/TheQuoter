@@ -1,6 +1,14 @@
 import request from "supertest";
 import app from "../src/modules/app";
-import { clearDatabase, closeDatabase, createPeople, init } from "./db";
+import {
+  classId,
+  clearDatabase,
+  closeDatabase,
+  createClasses,
+  createPeople,
+  createUsers,
+  init,
+} from "./db";
 
 beforeAll(async () => {
   await init();
@@ -19,13 +27,61 @@ describe("people", () => {
     await createPeople();
     // Expect empty array json
 
-    const res = await request(app)
+    let res = await request(app)
       .get("/people")
       .expect("Content-Type", /json/)
       .expect(200);
 
     // Expect array of people
     expect(res.body).toHaveLength(1);
+
+    res = await request(app)
+      .get("/people")
+      .query({ name: "teacher" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body).toHaveLength(1);
     expect(res.body[0].name).toBe("teacher");
+  });
+});
+
+describe("users", () => {
+  test("Register", async () => {
+    await createClasses();
+    process.env.JWT_SECRET = "secret";
+    const res = await request(app)
+      .post("/users")
+      .send({
+        email: "example@example.com",
+        username: "pablo",
+        password: "12345678",
+        class: classId,
+      })
+      .set("Content-Type", "application/json")
+      .expect("Content-Type", /json/)
+      .expect(201);
+
+    expect(res.body.user.username).toBe("pablo");
+    expect(res.body.user.email).toBe("example@example.com");
+    expect(res.body.user.role).toBe("user");
+    expect(res.body.user.class.toString()).toBe(classId.toString());
+  });
+
+  test("Login", async () => {
+    await createUsers();
+    process.env.JWT_SECRET = "secret";
+    const res = await request(app)
+      .post("/users/login")
+      .send({
+        username: "admin",
+        password: "admin",
+      })
+      .set("Content-Type", "application/json")
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body.user.username).toBe("admin");
+    expect(res.body.user.email).toBe("a.b@c.dd");
+    expect(res.body.user.role).toBe("admin");
   });
 });
