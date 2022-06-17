@@ -46,7 +46,8 @@
     "no-console": "off",
     "sonarjs/no-redundant-jump": "off",
     "no-unneeded-ternary": "error",
-    "sonarjs/no-duplicate-string": "off"
+    "sonarjs/no-duplicate-string": "off",
+    "unicorn/prefer-module": "off"
   },
   "ignorePatterns": ["**/node_modules/**", "**/dist/**"]
 }

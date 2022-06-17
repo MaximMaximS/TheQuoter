@@ -41,6 +41,11 @@ const QuoteSchema = new Schema<IQuote>(
       type: String,
       maxlength: 70,
       trim: true,
+      // No empty string
+      validate: {
+        validator: (v: string) => v !== "",
+        message: "Note cannot be empty",
+      },
     },
     text: {
       type: String,
@@ -52,6 +57,11 @@ const QuoteSchema = new Schema<IQuote>(
       type: String,
       maxlength: 70,
       trim: true,
+      // No empty string
+      validate: {
+        validator: (v: string) => v !== "",
+        message: "Note cannot be empty",
+      },
     },
     originator: {
       type: Schema.Types.ObjectId,
