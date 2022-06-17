@@ -12,7 +12,7 @@
 
 ## In Progress
 
-- [ ] Remake login to use Passport
+- [ ] Change hash field to password
 
 ## Done ✓
 

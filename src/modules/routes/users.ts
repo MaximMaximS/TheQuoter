@@ -8,7 +8,7 @@ import {
   NotFoundError,
   ValidatorError,
 } from "../errors";
-import { enforceRole, id } from "../utils";
+import { enforceRole, id, string } from "../utils";
 
 const saltRounds = 12;
 // Generate a JWT for the user
@@ -42,9 +42,9 @@ export async function register(body: IRegisterBody): Promise<IUser> {
 
   // Create user
   return await User.create({
-    username,
+    username: string(username, "username"),
     hash,
-    email,
+    email: string(email, "email"),
     class: id(body.class, "class"),
   });
 }
