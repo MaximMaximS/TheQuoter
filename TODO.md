@@ -12,6 +12,8 @@
 
 ## In Progress
 
+- [ ] Remake login to use Passport
+
 ## Done ✓
 
 - [x] Quote editing
