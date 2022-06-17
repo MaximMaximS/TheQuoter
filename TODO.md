@@ -4,7 +4,7 @@
 
 - [ ] Add logging
 - [ ] Add dialogs
-- [ ] Properly implement moderator role
+- [ ] Properly implement all permissions
 - [ ] Reactions
   - [ ] Likes and dislikes
   - [ ] Comments
