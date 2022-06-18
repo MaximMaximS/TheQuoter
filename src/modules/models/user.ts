@@ -3,7 +3,7 @@ import jwt from "jsonwebtoken";
 import { Document, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
-import { ServerError } from "../errors";
+import { ServerError, ValidatorError } from "../errors";
 
 export interface IReducedUser {
   _id: Types.ObjectId;
@@ -69,9 +69,11 @@ UserSchema.plugin(uniqueValidator);
 UserSchema.plugin(idValidator);
 
 UserSchema.pre("save", function (next) {
-  const user = this as IUser;
-  const hash = bcrypt.hashSync(user.password, 12);
-  user.password = hash;
+  if (this.password.length < 6) {
+    throw new ValidatorError("password", "minlength");
+  }
+  const hash = bcrypt.hashSync(this.password, 12);
+  this.password = hash;
   next();
 });
 

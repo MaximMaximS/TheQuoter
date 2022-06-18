@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import Class from "../src/modules/models/class";
@@ -35,13 +34,13 @@ export async function createUsers() {
   await User.create({
     username: "admin",
     email: "a.b@c.dd",
-    hash: await bcrypt.hash("admin", 12),
+    password: "adminadmin",
     role: "admin",
   });
   await User.create({
     username: "user",
     email: "e.f@g.hh",
-    hash: await bcrypt.hash("user", 12),
+    password: "useruser",
     role: "user",
   });
 }

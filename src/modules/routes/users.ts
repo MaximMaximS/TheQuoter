@@ -1,73 +1,41 @@
 import { Request, Response } from "express";
-import User, { IUser } from "../models/user";
-import {
-  ForbiddenError,
-  IncorrectLoginError,
-  NotFoundError,
-  ValidatorError,
-} from "../errors";
+import User from "../models/user";
+import { ForbiddenError, IncorrectLoginError, NotFoundError } from "../errors";
 import { enforceRole, id, string } from "../utils";
 
-export interface IRegisterBody {
-  email?: string;
-  username?: string;
-  password?: string;
-  class?: string;
-}
-
-export async function register(body: IRegisterBody): Promise<IUser> {
-  const { password, username, email } = body;
-  if (typeof password !== "string") {
-    throw new ValidatorError("password", "required");
-  }
-  if (password.length < 6) {
-    throw new ValidatorError("password", "minlength");
-  }
-
-  // Create user
-  return await User.create({
-    username: string(username, "username"),
-    password,
-    email: string(email, "email"),
-    class: id(body.class, "class"),
-  });
-}
-
 export async function registerRoute(req: Request, res: Response) {
-  const user = await register(req.body);
+  // Try to create a new user
+  const user = await User.create({
+    username: string(req.body.username, "username"),
+    password: string(req.body.password, "password"),
+    email: string(req.body.email, "email"),
+    class: id(req.body.class, "class"),
+  });
+  // Successfully created a new user
   res.status(201).json({
     token: user.genToken(),
     user: user.reduce(),
   });
 }
 
-export interface ILoginBody {
-  email?: string;
-  username?: string;
-  password?: string;
-}
-
-export async function login(body: ILoginBody): Promise<IUser> {
-  // Check if <email or username> and <password> is provided
-  if ((!body.email && !body.username) || !body.password) {
-    throw new IncorrectLoginError();
-  }
+async function login(username: string, password: string) {
   const user = await User.findOne({
-    $or: [{ email: { $eq: body.email } }, { username: { $eq: body.username } }],
-  });
+    username,
+  }).exec();
   if (user === null) {
     throw new IncorrectLoginError();
   }
-  // Verify password
-
-  if (!user.isValidPassword(body.password)) {
+  if (!user.isValidPassword(password)) {
     throw new IncorrectLoginError();
   }
   return user;
 }
 
 export async function loginRoute(req: Request, res: Response) {
-  const user = await login(req.body);
+  const user = await login(
+    string(req.body.username, "username"),
+    string(req.body.password, "password")
+  );
   res.json({
     token: user.genToken(),
     user: user.reduce(),
@@ -76,7 +44,7 @@ export async function loginRoute(req: Request, res: Response) {
 
 export async function getRoute(req: Request, res: Response) {
   const cUser = await enforceRole(req.headers.authorization, "user");
-  const user = await User.findById(req.params.id);
+  const user = await User.findById(req.params.id).exec();
   if (user === null) {
     throw new NotFoundError();
   }
@@ -91,7 +59,10 @@ export async function deleteRoute(req: Request, res: Response) {
   if (process.env.NODE_ENV !== "development") {
     throw new NotFoundError();
   }
-  const user = await login(req.body);
+  const user = await login(
+    string(req.body.username, "username"),
+    string(req.body.password, "password")
+  );
   user.remove();
   res.sendStatus(204);
 }

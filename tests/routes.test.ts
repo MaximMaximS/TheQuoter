@@ -74,7 +74,7 @@ describe("users", () => {
       .post("/users/login")
       .send({
         username: "admin",
-        password: "admin",
+        password: "adminadmin",
       })
       .set("Content-Type", "application/json")
       .expect("Content-Type", /json/)
