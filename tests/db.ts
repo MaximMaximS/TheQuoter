@@ -49,7 +49,7 @@ export const classId = new mongoose.Types.ObjectId();
 
 export async function createClasses() {
   await createUsers();
-  const admin = await User.findOne({ username: "admin" });
+  const admin = await User.findOne({ username: "admin" }).exec();
   if (admin === null) {
     throw new Error("admin is null");
   }
@@ -66,7 +66,7 @@ export async function createClasses() {
 
 export async function createPeople() {
   await createUsers();
-  const admin = await User.findOne({ username: "admin" });
+  const admin = await User.findOne({ username: "admin" }).exec();
   if (admin === null) {
     throw new Error("admin is null");
   }
@@ -86,11 +86,11 @@ export async function createPeople() {
 
 export async function createQuotes() {
   await createUsers();
-  const admin = await User.findOne({ username: "admin" });
+  const admin = await User.findOne({ username: "admin" }).exec();
   if (admin === null) {
     throw new Error("admin is null");
   }
-  const teacher = await Person.findOne({ name: "teacher" });
+  const teacher = await Person.findOne({ name: "teacher" }).exec();
   if (teacher === null) {
     throw new Error("teacher is null");
   }

@@ -94,8 +94,8 @@ QuoteSchema.plugin(idValidator);
 
 QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
   // Keep only id, context, text, note, originator, class, and optionally state
-  const classDoc = await Class.findById(this.class);
-  const originatorDoc = await Person.findById(this.originator);
+  const classDoc = await Class.findById(this.class).exec();
+  const originatorDoc = await Person.findById(this.originator).exec();
   if (originatorDoc === null) {
     throw new ServerError("Not found");
   }

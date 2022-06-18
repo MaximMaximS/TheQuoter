@@ -6,7 +6,7 @@ import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 
 export async function getRoute(req: Request, res: Response) {
-  const classFound = await Class.findById(req.params.id);
+  const classFound = await Class.findById(req.params.id).exec();
   if (classFound === null) {
     throw new NotFoundError();
   }
@@ -18,7 +18,7 @@ export async function search(name: string | undefined) {
   if (name !== undefined) {
     query["name"] = { $regex: name, $options: "i" };
   }
-  const classes = await Class.find(query);
+  const classes = await Class.find({ ...query }).exec();
   // Simplify all classes
   return classes.map((c) => c.reduce());
 }

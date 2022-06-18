@@ -5,7 +5,7 @@ import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 
 export async function getRoute(req: Request, res: Response) {
-  const personFound = await Person.findById(req.params.id);
+  const personFound = await Person.findById(req.params.id).exec();
   if (personFound === null) {
     throw new NotFoundError();
   }
@@ -23,7 +23,7 @@ export async function search(
   if (type !== undefined) {
     query["type"] = { $regex: type, $options: "i" };
   }
-  const people = await Person.find(query);
+  const people = await Person.find({ ...query }).exec();
   return people.map((p) => p.reduce());
 }
 

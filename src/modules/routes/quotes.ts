@@ -17,7 +17,7 @@ import {
 } from "../utils";
 
 export async function getRoute(req: Request, res: Response) {
-  const quoteFound = await Quote.findById(req.params.id);
+  const quoteFound = await Quote.findById(req.params.id).exec();
   if (quoteFound === null) {
     throw new NotFoundError();
   }
@@ -44,7 +44,7 @@ async function search(
   if (state !== undefined) {
     query.state = state;
   }
-  const quotes = await Quote.find(query);
+  const quotes = await Quote.find({ ...query }).exec();
 
   // Simplify all quotes
   return Promise.all(quotes.map((q) => q.reduce()));
@@ -167,7 +167,7 @@ async function edit(
   originator?: Types.ObjectId,
   classString?: string
 ) {
-  const current = await Quote.findById(id);
+  const current = await Quote.findById(id).exec();
   if (current === null) {
     throw new NotFoundError();
   }
@@ -222,7 +222,7 @@ export async function editRoute(req: Request, res: Response) {
 }
 
 async function state(state: "public" | "pending", id: unknown, user: IUser) {
-  const current = await Quote.findById(id);
+  const current = await Quote.findById(id).exec();
   if (current === null) {
     throw new NotFoundError();
   }
@@ -264,7 +264,7 @@ async function random() {
   const quotes = await Quote.find({
     state: "public",
     class: { $exists: false },
-  });
+  }).exec();
   return quotes[Math.floor(Math.random() * quotes.length)];
 }
 
@@ -276,7 +276,7 @@ export async function randomRoute(req: Request, res: Response) {
 // Quote must be users own pending quote or user must be admin
 export async function deleteRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "user");
-  const quote = await Quote.findById(req.params.id);
+  const quote = await Quote.findById(req.params.id).exec();
   if (quote === null) {
     throw new NotFoundError();
   }

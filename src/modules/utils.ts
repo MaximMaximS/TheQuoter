@@ -21,7 +21,7 @@ export async function getUser(authHeader?: string) {
     if (typeof uid === "string") {
       return;
     }
-    return (await User.findById(uid.id)) || undefined;
+    return (await User.findById(uid.id).exec()) || undefined;
   }
   return;
 }
