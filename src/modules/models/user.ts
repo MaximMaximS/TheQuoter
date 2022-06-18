@@ -1,6 +1,9 @@
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
 import { Document, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
+import { ServerError } from "../errors";
 
 export interface IReducedUser {
   _id: Types.ObjectId;
@@ -12,7 +15,7 @@ export interface IReducedUser {
 
 export interface IUser extends Document {
   username: string;
-  hash: string;
+  password: string;
   email: string;
   role: "admin" | "moderator" | "user";
   class: Types.ObjectId;
@@ -20,6 +23,8 @@ export interface IUser extends Document {
   updatedAt: Date;
 
   reduce(): IReducedUser;
+  isValidPassword(password: string): boolean;
+  genToken(): string;
 }
 
 const UserSchema = new Schema<IUser>(
@@ -33,7 +38,7 @@ const UserSchema = new Schema<IUser>(
       maxlength: 20,
       match: /^\w+$/,
     },
-    hash: {
+    password: {
       type: String,
       required: true,
     },
@@ -63,6 +68,13 @@ const UserSchema = new Schema<IUser>(
 UserSchema.plugin(uniqueValidator);
 UserSchema.plugin(idValidator);
 
+UserSchema.pre("save", function (next) {
+  const user = this as IUser;
+  const hash = bcrypt.hashSync(user.password, 12);
+  user.password = hash;
+  next();
+});
+
 UserSchema.methods.reduce = function (): IReducedUser {
   return {
     _id: this._id,
@@ -71,6 +83,26 @@ UserSchema.methods.reduce = function (): IReducedUser {
     role: this.role,
     class: this.class,
   };
+};
+
+UserSchema.methods.isValidPassword = function (password: string) {
+  return bcrypt.compareSync(password, this.password);
+};
+
+UserSchema.methods.genToken = function () {
+  const secret = process.env.JWT_SECRET;
+  if (secret === undefined) {
+    throw new ServerError("JWT_SECRET is undefined");
+  }
+  return jwt.sign(
+    {
+      id: this._id,
+    },
+    secret,
+    {
+      expiresIn: "1d",
+    }
+  );
 };
 
 export default model("User", UserSchema, "users");

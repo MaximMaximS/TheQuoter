@@ -12,7 +12,7 @@
 
 ## In Progress
 
-- [ ] Change hash field to password
+- [x] Change hash field to password
 
 ## Done ✓
 

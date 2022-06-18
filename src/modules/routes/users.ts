@@ -1,6 +1,4 @@
-import bcrypt from "bcrypt";
 import { Request, Response } from "express";
-import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/user";
 import {
   ForbiddenError,
@@ -9,17 +7,6 @@ import {
   ValidatorError,
 } from "../errors";
 import { enforceRole, id, string } from "../utils";
-
-const saltRounds = 12;
-// Generate a JWT for the user
-export function getToken(user: IUser) {
-  if (process.env.JWT_SECRET === undefined) {
-    throw new Error("JWT_SECRET is undefined");
-  }
-  return jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
-    expiresIn: "1d",
-  });
-}
 
 export interface IRegisterBody {
   email?: string;
@@ -37,13 +24,10 @@ export async function register(body: IRegisterBody): Promise<IUser> {
     throw new ValidatorError("password", "minlength");
   }
 
-  // Hash password
-  const hash = await bcrypt.hash(password, saltRounds);
-
   // Create user
   return await User.create({
     username: string(username, "username"),
-    hash,
+    password,
     email: string(email, "email"),
     class: id(body.class, "class"),
   });
@@ -51,9 +35,8 @@ export async function register(body: IRegisterBody): Promise<IUser> {
 
 export async function registerRoute(req: Request, res: Response) {
   const user = await register(req.body);
-  const token = getToken(user);
   res.status(201).json({
-    token,
+    token: user.genToken(),
     user: user.reduce(),
   });
 }
@@ -76,8 +59,8 @@ export async function login(body: ILoginBody): Promise<IUser> {
     throw new IncorrectLoginError();
   }
   // Verify password
-  const result = await bcrypt.compare(body.password, user.hash);
-  if (!result) {
+
+  if (!user.isValidPassword(body.password)) {
     throw new IncorrectLoginError();
   }
   return user;
@@ -85,9 +68,8 @@ export async function login(body: ILoginBody): Promise<IUser> {
 
 export async function loginRoute(req: Request, res: Response) {
   const user = await login(req.body);
-  const token = getToken(user);
   res.json({
-    token,
+    token: user.genToken(),
     user: user.reduce(),
   });
 }
