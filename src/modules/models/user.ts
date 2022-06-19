@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Document, Schema, Types, model } from "mongoose";
+import { Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 import { ServerError, ValidatorError } from "../errors";
@@ -13,7 +13,7 @@ export interface IReducedUser {
   class: Types.ObjectId;
 }
 
-export interface IUser extends Document {
+interface IUser {
   username: string;
   password: string;
   email: string;
@@ -21,13 +21,17 @@ export interface IUser extends Document {
   class: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
 
+interface IUserMethods {
   reduce(): IReducedUser;
   isValidPassword(password: string): boolean;
   genToken(): string;
 }
 
-const UserSchema = new Schema<IUser>(
+export type UserModel = Model<IUser, unknown, IUserMethods>;
+
+const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
   {
     username: {
       type: String,
@@ -77,7 +81,7 @@ UserSchema.pre("save", function (next) {
   next();
 });
 
-UserSchema.methods.reduce = function (): IReducedUser {
+UserSchema.method("reduce", function (): IReducedUser {
   return {
     _id: this._id,
     username: this.username,
@@ -85,13 +89,13 @@ UserSchema.methods.reduce = function (): IReducedUser {
     role: this.role,
     class: this.class,
   };
-};
+});
 
-UserSchema.methods.isValidPassword = function (password: string) {
+UserSchema.method("isValidPassword", function (password: string) {
   return bcrypt.compareSync(password, this.password);
-};
+});
 
-UserSchema.methods.genToken = function () {
+UserSchema.method("genToken", function () {
   const secret = process.env.JWT_SECRET;
   if (secret === undefined) {
     throw new ServerError("JWT_SECRET is undefined");
@@ -105,6 +109,6 @@ UserSchema.methods.genToken = function () {
       expiresIn: "1d",
     }
   );
-};
+});
 
-export default model("User", UserSchema, "users");
+export default model<IUser, UserModel>("User", UserSchema, "users");

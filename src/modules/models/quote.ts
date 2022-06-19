@@ -1,4 +1,4 @@
-import { Document, Schema, Types, model } from "mongoose";
+import { Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import { ServerError } from "../errors";
 import Class, { IReducedClass } from "./class";
@@ -14,7 +14,7 @@ export interface IReducedQuote {
   state: "pending" | "public";
 }
 
-export interface IQuote extends Document {
+interface IQuote {
   state: "pending" | "public" | "archived";
   context?: string;
   text: string;
@@ -25,12 +25,15 @@ export interface IQuote extends Document {
   approvedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
 
-  // Instance methods
+interface IQuoteMethods {
   reduce(): Promise<IReducedQuote>;
 }
 
-const QuoteSchema = new Schema<IQuote>(
+type QuoteModel = Model<IQuote, unknown, IQuoteMethods>;
+
+const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethods>(
   {
     state: {
       type: String,
@@ -90,9 +93,7 @@ const QuoteSchema = new Schema<IQuote>(
   }
 );
 
-QuoteSchema.plugin(idValidator);
-
-QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
+QuoteSchema.method("reduce", async function () {
   const classDoc = await Class.findById(this.class).exec();
   const originatorDoc = await Person.findById(this.originator).exec();
   if (originatorDoc === null) {
@@ -108,6 +109,8 @@ QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
     state: this.state,
   };
   return doc;
-};
+});
 
-export default model("Quote", QuoteSchema, "quotes");
+QuoteSchema.plugin(idValidator);
+
+export default model<IQuote, QuoteModel>("Quote", QuoteSchema, "quotes");

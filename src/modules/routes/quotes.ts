@@ -1,7 +1,6 @@
 import { Request, Response } from "express";
-import { FilterQuery, Types } from "mongoose";
-import Quote, { IQuote, IReducedQuote } from "../models/quote";
-import { IUser } from "../models/user";
+import { Types } from "mongoose";
+import Quote, { IReducedQuote } from "../models/quote";
 import {
   ConflictError,
   ForbiddenError,
@@ -31,20 +30,20 @@ async function search(
   text: string | undefined,
   state: "pending" | "public" | undefined
 ): Promise<IReducedQuote[]> {
-  const query: FilterQuery<IQuote> = {};
+  let query = Quote.find();
   if (originator !== undefined) {
-    query.originator = originator;
+    query = query.where("originator").equals(originator);
   }
   if (classId !== undefined) {
-    query.class = classId;
+    query = query.where("class").equals(classId);
   }
   if (text !== undefined) {
-    query.text = { $regex: text, $options: "i" };
+    query = query.where("text").regex(text, "i");
   }
   if (state !== undefined) {
-    query.state = state;
+    query = query.where("state").equals(state);
   }
-  const quotes = await Quote.find({ ...query }).exec();
+  const quotes = await query.exec();
 
   // Simplify all quotes
   return Promise.all(quotes.map((q) => q.reduce()));
@@ -79,14 +78,10 @@ export async function searchRoute(req: Request, res: Response) {
   res.json(quotesFound); // Send the found enteries
 }
 
-async function create(
-  user: IUser,
-  text: string,
-  originator: Types.ObjectId,
-  classId?: Types.ObjectId,
-  context?: string,
-  note?: string
-) {
+export async function createRoute(req: Request, res: Response) {
+  const user = await enforceRole(req.headers.authorization, "user");
+  const classId = idOrUndefined(req.body.class, "class");
+
   let state: "public" | "pending" = "pending";
   /*
   ADMIN: public
@@ -106,34 +101,29 @@ async function create(
     }
   }
 
-  const result = await Quote.create({
-    context,
-    text,
-    note,
-    originator,
+  const { _id } = await Quote.create({
+    context: stringOrUndefined(req.body.context),
+    text: string(req.body.text, "text"),
+    note: stringOrUndefined(req.body.note),
+    originator: id(req.body.originator, "originator"),
     classId,
     state,
     createdBy: user,
     approvedBy: state === "public" ? user : undefined,
   });
-  return result.reduce();
+  res.status(user.role === "admin" ? 201 : 202).json({ _id });
 }
 
-export async function createRoute(req: Request, res: Response) {
+// TODO
+// eslint-disable-next-line sonarjs/cognitive-complexity
+export async function editRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "user");
-  const quoteCreated = await create(
-    user,
-    string(req.body.text, "text"),
-    id(req.body.originator, "originator"),
-    idOrUndefined(req.body.class, "class"),
-    stringOrUndefined(req.body.context),
-    stringOrUndefined(req.body.note)
-  );
-  res.status(user.role === "admin" ? 201 : 202).json({ _id: quoteCreated._id });
-}
+  const current = await Quote.findById(req.params.idValidator).exec();
+  if (current === null) {
+    throw new NotFoundError();
+  }
 
-function resolveAccess(quote: IQuote, user: IUser) {
-  if (quote.state === "public") {
+  if (current.state === "public") {
     // Quote is public, so only admins can change it
 
     // Throw error if user is not an admin
@@ -144,57 +134,45 @@ function resolveAccess(quote: IQuote, user: IUser) {
     // Quote is pending, so admins, moderators from the same class, and the author can change it
 
     // If user is creator
-    if (quote.createdBy.equals(user._id)) {
+    if (current.createdBy.equals(user._id)) {
       // User is creator, so they can't change the state
     } else if (
       !(
         user.role === "admin" ||
-        (user.role === "moderator" && user.class.equals(quote.class || ""))
+        (user.role === "moderator" && user.class.equals(current.class || ""))
       )
     ) {
       // User isn't creator, an admin, or a moderator from same class
       throw new ForbiddenError();
     }
   }
-}
-
-async function edit(
-  id: unknown,
-  user: IUser,
-  text?: string,
-  context?: string,
-  note?: string,
-  originator?: Types.ObjectId,
-  classString?: string
-) {
-  const current = await Quote.findById(id).exec();
-  if (current === null) {
-    throw new NotFoundError();
-  }
-
-  resolveAccess(current, user);
   // Edit the quotes
 
+  const text = stringOrUndefined(req.body.text);
   // Text - change or nothing - don't change
   if (text !== undefined) {
     current.text = text;
   }
 
+  const originator = idOrUndefined(req.body.originator, "originator");
   // Id - change or nothing - don't change
   if (originator !== undefined) {
     current.originator = originator;
   }
 
+  const context = stringOrUndefined(req.body.context);
   // Text - change, "" - unset, or nothing - don't change
   if (context !== undefined) {
     current.context = context === "" ? undefined : context;
   }
 
+  const note = stringOrUndefined(req.body.note);
   // Text - change, "" - unset, or nothing - don't change
   if (current.note !== note) {
     current.note = note === "" ? undefined : note;
   }
 
+  const classString = stringOrUndefined(req.body.class);
   // Id - change, "" - unset, or nothing - don't change
   if (classString === "") {
     current.class = undefined;
@@ -206,23 +184,18 @@ async function edit(
   }
 
   return await current.save();
-}
 
-export async function editRoute(req: Request, res: Response) {
-  await edit(
-    req.params.id,
-    await enforceRole(req.headers.authorization, "user"),
-    stringOrUndefined(req.body.text),
-    stringOrUndefined(req.body.context),
-    stringOrUndefined(req.body.note),
-    idOrUndefined(req.body.originator, "originator"),
-    stringOrUndefined(req.body.class)
-  );
   res.sendStatus(204);
 }
 
-async function state(state: "public" | "pending", id: unknown, user: IUser) {
-  const current = await Quote.findById(id).exec();
+export async function stateRoute(req: Request, res: Response) {
+  const state = string(req.body.state, "state");
+  if (state !== "public" && state !== "pending") {
+    throw new ValidatorError("state", "state");
+  }
+
+  const user = await enforceRole(req.headers.authorization, "admin");
+  const current = await Quote.findById(req.params.id).exec();
   if (current === null) {
     throw new NotFoundError();
   }
@@ -242,20 +215,7 @@ async function state(state: "public" | "pending", id: unknown, user: IUser) {
   } else {
     throw new ConflictError("state");
   }
-  return;
-}
 
-export async function stateRoute(req: Request, res: Response) {
-  const stateStr = string(req.body.state, "state");
-  if (stateStr !== "public" && stateStr !== "pending") {
-    throw new ValidatorError("state", "state");
-  }
-
-  await state(
-    stateStr,
-    req.params.id,
-    await enforceRole(req.headers.authorization, "moderator")
-  );
   res.sendStatus(204);
 }
 

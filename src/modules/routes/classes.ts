@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { FilterQuery } from "mongoose";
-import Class, { IClass } from "../models/class";
+import Class from "../models/class";
 import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 
@@ -14,11 +13,11 @@ export async function getRoute(req: Request, res: Response) {
 
 export async function searchRoute(req: Request, res: Response) {
   const name = stringOrUndefined(req.query.name);
-  const query: FilterQuery<IClass> = {};
+  let query = Class.find();
   if (name !== undefined) {
-    query.name = { $regex: name, $options: "i" };
+    query = query.where("name").regex(name, "i");
   }
-  const classes = await Class.find({ ...query }).exec();
+  const classes = await query.exec();
   // Simplify all classes
   const classesFound = classes.map((c) => c.reduce());
 

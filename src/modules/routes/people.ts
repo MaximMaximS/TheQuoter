@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { FilterQuery } from "mongoose";
-import Person, { IPerson } from "../models/person";
+import Person from "../models/person";
 import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 
@@ -16,14 +15,14 @@ export async function searchRoute(req: Request, res: Response) {
   const name = stringOrUndefined(req.query.name);
   const type = stringOrUndefined(req.query.type);
 
-  const query: FilterQuery<IPerson> = {};
+  let query = Person.find();
   if (name !== undefined) {
-    query["name"] = { $regex: name, $options: "i" };
+    query = query.where("name").regex(name, "i");
   }
   if (type !== undefined) {
-    query["type"] = { $regex: type, $options: "i" };
+    query = query.where("type").regex(type, "i");
   }
-  const people = await Person.find({ ...query }).exec();
+  const people = await query.exec();
   res.json(people.map((p) => p.reduce()));
 }
 

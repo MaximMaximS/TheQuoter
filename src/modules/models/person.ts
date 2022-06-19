@@ -1,4 +1,4 @@
-import { Document, Schema, Types, model } from "mongoose";
+import { Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
@@ -8,18 +8,21 @@ export interface IReducedPerson {
   type: string;
 }
 
-export interface IPerson extends Document {
+interface IPerson {
   name: string;
   type: "teacher" | "student" | "other";
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
 
-  // Instance methods
+interface IPersonMethods {
   reduce(): IReducedPerson;
 }
 
-const PersonSchema = new Schema<IPerson>(
+type PersonModel = Model<IPerson, unknown, IPersonMethods>;
+
+const PersonSchema = new Schema<IPerson, PersonModel, IPersonMethods>(
   {
     name: {
       type: String,
@@ -42,15 +45,15 @@ const PersonSchema = new Schema<IPerson>(
   { timestamps: true }
 );
 
-PersonSchema.methods.reduce = function (): IReducedPerson {
+PersonSchema.method("reduce", function (): IReducedPerson {
   return {
     _id: this._id,
     name: this.name,
     type: this.type,
   };
-};
+});
 
 PersonSchema.plugin(uniqueValidator);
 PersonSchema.plugin(idValidator);
 
-export default model("Person", PersonSchema, "people");
+export default model<IPerson, PersonModel>("Person", PersonSchema, "people");

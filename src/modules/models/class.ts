@@ -1,4 +1,4 @@
-import { Document, Schema, Types, model } from "mongoose";
+import { Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
@@ -7,17 +7,20 @@ export interface IReducedClass {
   name: string;
 }
 
-export interface IClass extends Document {
+interface IClass {
   name: string;
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
 
-  // Instance methods
+interface IClassMethods {
   reduce(): IReducedClass;
 }
 
-const ClassSchema = new Schema<IClass>(
+type ClassModel = Model<IClass, unknown, IClassMethods>;
+
+const ClassSchema = new Schema<IClass, ClassModel, IClassMethods>(
   {
     name: {
       type: String,
@@ -35,14 +38,14 @@ const ClassSchema = new Schema<IClass>(
   { timestamps: true }
 );
 
-ClassSchema.methods.reduce = function (): IReducedClass {
+ClassSchema.method("reduce", function (): IReducedClass {
   return {
     _id: this._id,
     name: this.name,
   };
-};
+});
 
 ClassSchema.plugin(uniqueValidator);
 ClassSchema.plugin(idValidator);
 
-export default model("Class", ClassSchema, "classes");
+export default model<IClass, ClassModel>("Class", ClassSchema, "classes");
