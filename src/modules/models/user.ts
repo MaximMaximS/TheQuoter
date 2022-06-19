@@ -1,6 +1,9 @@
-import { Document, Schema, Types, model } from "mongoose";
+import bcrypt from "bcrypt";
+import jwt from "jsonwebtoken";
+import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
+import { ForbiddenError, ServerError, ValidatorError } from "../errors";
 
 export interface IReducedUser {
   _id: Types.ObjectId;
@@ -10,19 +13,26 @@ export interface IReducedUser {
   class: Types.ObjectId;
 }
 
-export interface IUser extends Document {
+interface IUser {
   username: string;
-  hash: string;
+  password: string;
   email: string;
   role: "admin" | "moderator" | "user";
   class: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
-
-  reduce(): IReducedUser;
 }
 
-const UserSchema = new Schema<IUser>(
+interface IUserMethods {
+  reduce(): IReducedUser;
+  isValidPassword(password: string): boolean;
+  genToken(): string;
+  requirePermit(permit: "admin" | "moderator" | Types.ObjectId): void;
+}
+
+export type UserModel = Model<IUser, unknown, IUserMethods>;
+
+const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
   {
     username: {
       type: String,
@@ -33,7 +43,7 @@ const UserSchema = new Schema<IUser>(
       maxlength: 20,
       match: /^\w+$/,
     },
-    hash: {
+    password: {
       type: String,
       required: true,
     },
@@ -63,7 +73,19 @@ const UserSchema = new Schema<IUser>(
 UserSchema.plugin(uniqueValidator);
 UserSchema.plugin(idValidator);
 
-UserSchema.methods.reduce = function (): IReducedUser {
+UserSchema.pre("save", function (next) {
+  if (this.password.length < 6) {
+    throw new ValidatorError("password", "minlength");
+  }
+  const hash = bcrypt.hashSync(this.password, 12);
+  this.password = hash;
+  next();
+});
+
+export type UserType = Document<Types.ObjectId, unknown, IUser> &
+  IUser & { _id: Types.ObjectId } & IUserMethods;
+
+UserSchema.method<UserType>("reduce", function (): IReducedUser {
   return {
     _id: this._id,
     username: this.username,
@@ -71,6 +93,47 @@ UserSchema.methods.reduce = function (): IReducedUser {
     role: this.role,
     class: this.class,
   };
-};
+});
 
-export default model("User", UserSchema, "users");
+UserSchema.method<UserType>("isValidPassword", function (password: string) {
+  return bcrypt.compareSync(password, this.password);
+});
+
+UserSchema.method<UserType>("genToken", function () {
+  const secret = process.env.JWT_SECRET;
+  if (secret === undefined) {
+    throw new ServerError("JWT_SECRET is undefined");
+  }
+  return jwt.sign(
+    {
+      id: this._id,
+    },
+    secret,
+    {
+      expiresIn: "1d",
+    }
+  );
+});
+
+UserSchema.method<UserType>(
+  "requirePermit",
+  function (permit: "admin" | "moderator" | Types.ObjectId) {
+    if (this.role === "user") {
+      throw new ForbiddenError();
+    }
+    // If user is admin, return
+    if (this.role === "admin") {
+      return;
+    }
+    // If admin is required, throw error
+    if (permit === "admin") {
+      throw new ForbiddenError();
+    }
+    // If user is user, check if permit is user
+    if (typeof permit !== "string" && !permit.equals(this.class)) {
+      throw new ForbiddenError();
+    }
+  }
+);
+
+export default model<IUser, UserModel>("User", UserSchema, "users");

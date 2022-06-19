@@ -31,10 +31,10 @@ describe("utils", () => {
   });
 
   test("function stringOrUndefined", () => {
-    expect(utils.stringOrUndefined("foo")).toBe("foo");
-    expect(utils.stringOrUndefined()).toBeUndefined();
-    expect(utils.stringOrUndefined(1)).toBeUndefined();
-    expect(utils.stringOrUndefined(true)).toBeUndefined();
+    expect(utils.stringOrUndefined("foo", "bar")).toBe("foo");
+    expect(utils.stringOrUndefined(undefined, "bar")).toBeUndefined();
+    expect(() => utils.stringOrUndefined(1, "bar")).toThrow(ValidatorError);
+    expect(() => utils.stringOrUndefined(true, "bar")).toThrow(ValidatorError);
   });
 
   test("function string", () => {

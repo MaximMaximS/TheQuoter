@@ -1,43 +1,35 @@
 import { Request, Response } from "express";
-import { FilterQuery } from "mongoose";
-import Class, { IClass } from "../models/class";
-import { IUser } from "../models/user";
+import Class from "../models/class";
 import { NotFoundError } from "../errors";
 import { enforceRole, string, stringOrUndefined } from "../utils";
 
 export async function getRoute(req: Request, res: Response) {
-  const classFound = await Class.findById(req.params.id);
+  const classFound = await Class.findById(req.params.id).exec();
   if (classFound === null) {
     throw new NotFoundError();
   }
   res.json(classFound.reduce());
 }
 
-export async function search(name: string | undefined) {
-  const query: FilterQuery<IClass> = {};
-  if (name !== undefined) {
-    query["name"] = { $regex: name, $options: "i" };
-  }
-  const classes = await Class.find(query);
-  // Simplify all classes
-  return classes.map((c) => c.reduce());
-}
-
 export async function searchRoute(req: Request, res: Response) {
-  const classesFound = await search(stringOrUndefined(req.query.name));
-  res.json(classesFound);
-}
+  const name = stringOrUndefined(req.query.name, "name");
+  let query = Class.find();
+  if (name !== undefined) {
+    query = query.where("name").regex(name, "i");
+  }
+  const classes = await query.exec();
+  // Simplify all classes
+  const classesFound = classes.map((c) => c.reduce());
 
-export async function create(name: string, user: IUser) {
-  const result = await Class.create({
-    name,
-    createdBy: user._id,
-  });
-  return result.reduce();
+  res.json(classesFound);
 }
 
 export async function createRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "admin");
-  const classCreated = await create(string(req.body.name, "name"), user);
-  res.status(201).json({ _id: classCreated._id });
+  const name = string(req.body.name, "name");
+  const { _id } = await Class.create({
+    name,
+    createdBy: user._id,
+  });
+  res.status(201).json({ _id });
 }
