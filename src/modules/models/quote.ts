@@ -11,7 +11,7 @@ export interface IReducedQuote {
   note?: string;
   originator: IReducedPerson;
   class?: IReducedClass;
-  state: "pending" | "public";
+  state: "pending" | "public" | "archived";
 }
 
 interface IQuote {

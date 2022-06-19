@@ -27,7 +27,7 @@ export async function getRoute(req: Request, res: Response) {
 export async function searchRoute(req: Request, res: Response) {
   // Public is fine, but if it's not, we need to check if the user is an admin
   const state = req.query.state;
-  if (state === "pending") {
+  if (state === "pending" || state === "archived") {
     await enforceRole(req.headers.authorization, "admin");
   } else if (state !== undefined && state !== "public") {
     throw new ValidatorError("state", "state");
@@ -94,28 +94,16 @@ export async function createRoute(req: Request, res: Response) {
 }
 
 function editPerm(current: QuoteType, user: UserType) {
-  if (current.state === "public") {
-    // Quote is public, so only admins can change it
-
-    // Throw error if user is not an admin
-    if (user.role !== "admin") {
-      throw new ForbiddenError();
+  if (current.state === "pending") {
+    if (user.role === "user") {
+      if (!current.createdBy.equals(user._id)) {
+        throw new ForbiddenError();
+      }
+    } else {
+      user.requirePermit(current.class || "admin");
     }
   } else {
-    // Quote is pending, so admins, moderators from the same class, and the author can change it
-
-    // If user is creator
-    if (current.createdBy.equals(user._id)) {
-      // User is creator, so they can't change the state
-    } else if (
-      !(
-        user.role === "admin" ||
-        (user.role === "moderator" && user.class.equals(current.class || ""))
-      )
-    ) {
-      // User isn't creator, an admin, or a moderator from same class
-      throw new ForbiddenError();
-    }
+    user.requirePermit("admin");
   }
 }
 
@@ -171,34 +159,46 @@ export async function editRoute(req: Request, res: Response) {
 
 export async function stateRoute(req: Request, res: Response) {
   const state = string(req.body.state, "state");
-  if (state !== "public" && state !== "pending") {
+  if (state !== "public" && state !== "pending" && state !== "archived") {
     throw new ValidatorError("state", "state");
   }
 
-  const user = await enforceRole(req.headers.authorization, "admin");
+  const user = await enforceRole(req.headers.authorization, "user");
   const current = await Quote.findById(req.params.id).exec();
   if (current === null) {
     throw new NotFoundError();
   }
 
-  if (user.role !== "admin" && !user.class.equals(current.class || "")) {
-    throw new ForbiddenError();
-  }
-
-  if (state === "pending" && current.state === "public") {
-    throw new ConflictError("state");
-  }
-
-  if (current.state !== state) {
-    current.state = state;
-    current.approvedBy = user._id;
-    await current.save();
+  if (current.state === "pending") {
+    user.requirePermit(current.class || "admin");
   } else {
-    throw new ConflictError("state");
+    user.requirePermit("admin");
   }
 
+  switch (state) {
+    case "public":
+      if (current.state === "pending") {
+        current.state = "public";
+        current.approvedBy = user._id;
+        await current.save();
+      } else {
+        throw new ConflictError("state");
+      }
+      break;
+    case "archived":
+      if (current.state !== "archived") {
+        current.state = "archived";
+        await current.save();
+      } else {
+        throw new ConflictError("state");
+      }
+      break;
+    default:
+      throw new ConflictError("state");
+  }
   res.sendStatus(204);
 }
+
 export async function randomRoute(req: Request, res: Response) {
   const quotes = await Quote.find({
     state: "public",

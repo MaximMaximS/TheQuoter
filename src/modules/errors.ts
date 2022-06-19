@@ -13,7 +13,7 @@ export function genValidatorMessage(path: string, kind: string) {
     case "ObjectId":
       return `${path} is not a valid ObjectId`;
     case "state":
-      return `${path} can be only "pending" or "public"`;
+      return `${path} can be only "pending" or "public" or "archived"`;
     default:
       return `${path} is not valid (${kind})`;
   }
