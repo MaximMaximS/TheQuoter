@@ -15,7 +15,7 @@ export interface IReducedQuote {
 }
 
 export interface IQuote extends Document {
-  state: "pending" | "public";
+  state: "pending" | "public" | "archived";
   context?: string;
   text: string;
   note?: string;
@@ -34,8 +34,8 @@ const QuoteSchema = new Schema<IQuote>(
   {
     state: {
       type: String,
-      enum: ["pending", "public"],
-      required: true,
+      enum: ["pending", "public", "archived"],
+      default: "pending",
     },
     context: {
       type: String,
@@ -93,11 +93,10 @@ const QuoteSchema = new Schema<IQuote>(
 QuoteSchema.plugin(idValidator);
 
 QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
-  // Keep only id, context, text, note, originator, class, and optionally state
   const classDoc = await Class.findById(this.class).exec();
   const originatorDoc = await Person.findById(this.originator).exec();
   if (originatorDoc === null) {
-    throw new ServerError("Not found");
+    throw new ServerError(`Orginator for quote ${this._id} not found`);
   }
   const doc: IReducedQuote = {
     _id: this._id,

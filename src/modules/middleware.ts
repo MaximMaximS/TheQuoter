@@ -4,7 +4,7 @@ import {
   NotBeforeError,
   TokenExpiredError,
 } from "jsonwebtoken";
-import mongoose from "mongoose";
+import { Error } from "mongoose";
 import * as errors from "./errors";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
@@ -21,7 +21,7 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     err instanceof JsonWebTokenError
   ) {
     res.sendStatus(401);
-  } else if (err instanceof mongoose.Error.ValidationError) {
+  } else if (err instanceof Error.ValidationError) {
     // Extract first, possible TODO to send all of them
     const first = err.errors[Object.keys(err.errors)[0]];
     res.status(400).json({

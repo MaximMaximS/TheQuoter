@@ -4,7 +4,6 @@
 
 - [ ] Add logging
 - [ ] Add dialogs
-- [ ] Properly implement all permissions
 - [ ] Reactions
   - [ ] Likes and dislikes
   - [ ] Comments
@@ -12,10 +11,12 @@
 
 ## In Progress
 
-- [x] Change hash field to password
+- [ ] Properly implement all permissions
+- [ ] Add quote archivation
 
 ## Done ✓
 
 - [x] Quote editing
 - [x] Return user document when logging in
 - [x] Write something in README.md
+- [x] Change hash field to password
