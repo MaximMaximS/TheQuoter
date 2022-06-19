@@ -12,7 +12,7 @@ export async function getRoute(req: Request, res: Response) {
 }
 
 export async function searchRoute(req: Request, res: Response) {
-  const name = stringOrUndefined(req.query.name);
+  const name = stringOrUndefined(req.query.name, "name");
   let query = Class.find();
   if (name !== undefined) {
     query = query.where("name").regex(name, "i");

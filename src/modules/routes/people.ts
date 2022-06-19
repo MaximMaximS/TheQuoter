@@ -12,8 +12,8 @@ export async function getRoute(req: Request, res: Response) {
 }
 
 export async function searchRoute(req: Request, res: Response) {
-  const name = stringOrUndefined(req.query.name);
-  const type = stringOrUndefined(req.query.type);
+  const name = stringOrUndefined(req.query.name, "name");
+  const type = stringOrUndefined(req.query.type, "type");
 
   let query = Person.find();
   if (name !== undefined) {

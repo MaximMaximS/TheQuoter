@@ -52,11 +52,17 @@ export async function enforceRole(
   return user;
 }
 
-export function stringOrUndefined(str?: unknown): string | undefined {
+export function stringOrUndefined(
+  str: unknown,
+  path: string
+): string | undefined {
+  if (str === undefined) {
+    return;
+  }
   if (typeof str === "string") {
     return str;
   }
-  return undefined;
+  throw new ValidatorError(path, "string");
 }
 
 export function string(str: unknown, path: string): string {
@@ -70,7 +76,7 @@ export function idOrUndefined(
   id: unknown,
   path: string
 ): Types.ObjectId | undefined {
-  const soru = stringOrUndefined(id);
+  const soru = stringOrUndefined(id, path);
   if (soru === undefined) {
     return undefined;
   }

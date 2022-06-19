@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
-import { Types } from "mongoose";
-import Quote, { IReducedQuote, QuoteType } from "../models/quote";
+import Quote, { QuoteType } from "../models/quote";
 import { UserType } from "../models/user";
 import {
   ConflictError,
@@ -25,19 +24,25 @@ export async function getRoute(req: Request, res: Response) {
   res.json(reducedQuote);
 }
 
-async function search(
-  originator: Types.ObjectId | undefined,
-  classId: Types.ObjectId | undefined,
-  text: string | undefined,
-  state: "pending" | "public" | undefined
-): Promise<IReducedQuote[]> {
+export async function searchRoute(req: Request, res: Response) {
+  // Public is fine, but if it's not, we need to check if the user is an admin
+  const state = req.query.state;
+  if (state === "pending") {
+    await enforceRole(req.headers.authorization, "admin");
+  } else if (state !== undefined && state !== "public") {
+    throw new ValidatorError("state", "state");
+  }
+
   let query = Quote.find();
+  const originator = idOrUndefined(req.query.originator, "originator");
   if (originator !== undefined) {
     query = query.where("originator").equals(originator);
   }
+  const classId = idOrUndefined(req.query.class, "class");
   if (classId !== undefined) {
     query = query.where("class").equals(classId);
   }
+  const text = stringOrUndefined(req.query.text, "text");
   if (text !== undefined) {
     query = query.where("text").regex(text, "i");
   }
@@ -47,34 +52,7 @@ async function search(
   const quotes = await query.exec();
 
   // Simplify all quotes
-  return Promise.all(quotes.map((q) => q.reduce()));
-}
-
-async function resolveState(req: Request) {
-  const state = req.query.state;
-  if (state === undefined) {
-    return;
-  }
-  if (state === "pending") {
-    await enforceRole(req.headers.authorization, "admin");
-    return "pending";
-  }
-  if (typeof state !== "string" || state !== "public") {
-    throw new ValidatorError("state", "state");
-  }
-  return "public";
-}
-
-export async function searchRoute(req: Request, res: Response) {
-  // Public is fine, but if it's not, we need to check if the user is an admin
-  const state = await resolveState(req);
-
-  const quotesFound = await search(
-    idOrUndefined(req.query.originator, "originator"),
-    idOrUndefined(req.query.class, "class"),
-    stringOrUndefined(req.query.text),
-    state
-  );
+  const quotesFound = await Promise.all(quotes.map((q) => q.reduce()));
 
   res.json(quotesFound); // Send the found enteries
 }
@@ -103,9 +81,9 @@ export async function createRoute(req: Request, res: Response) {
   }
 
   const { _id } = await Quote.create({
-    context: stringOrUndefined(req.body.context),
+    context: stringOrUndefined(req.body.context, "context"),
     text: string(req.body.text, "text"),
-    note: stringOrUndefined(req.body.note),
+    note: stringOrUndefined(req.body.note, "note"),
     originator: id(req.body.originator, "originator"),
     classId,
     state,
@@ -151,7 +129,7 @@ export async function editRoute(req: Request, res: Response) {
   editPerm(current, user);
   // Edit the quotes
 
-  const text = stringOrUndefined(req.body.text);
+  const text = stringOrUndefined(req.body.text, "text");
   // Text - change or nothing - don't change
   if (text !== undefined) {
     current.text = text;
@@ -163,19 +141,19 @@ export async function editRoute(req: Request, res: Response) {
     current.originator = originator;
   }
 
-  const context = stringOrUndefined(req.body.context);
+  const context = stringOrUndefined(req.body.context, "context");
   // Text - change, "" - unset, or nothing - don't change
   if (context !== undefined) {
     current.context = context === "" ? undefined : context;
   }
 
-  const note = stringOrUndefined(req.body.note);
+  const note = stringOrUndefined(req.body.note, "note");
   // Text - change, "" - unset, or nothing - don't change
   if (current.note !== note) {
     current.note = note === "" ? undefined : note;
   }
 
-  const classString = stringOrUndefined(req.body.class);
+  const classString = stringOrUndefined(req.body.class, "class");
   // Id - change, "" - unset, or nothing - don't change
   if (classString === "") {
     current.class = undefined;
@@ -221,18 +199,12 @@ export async function stateRoute(req: Request, res: Response) {
 
   res.sendStatus(204);
 }
-
-async function random() {
-  // Get random quote
+export async function randomRoute(req: Request, res: Response) {
   const quotes = await Quote.find({
     state: "public",
     class: { $exists: false },
   }).exec();
-  return quotes[Math.floor(Math.random() * quotes.length)];
-}
-
-export async function randomRoute(req: Request, res: Response) {
-  const quote = await random();
+  const quote = quotes[Math.floor(Math.random() * quotes.length)];
   res.json(await quote.reduce());
 }
 
