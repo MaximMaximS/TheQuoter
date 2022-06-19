@@ -1,4 +1,4 @@
-import { Model, Schema, Types, model } from "mongoose";
+import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
@@ -55,5 +55,8 @@ PersonSchema.method("reduce", function (): IReducedPerson {
 
 PersonSchema.plugin(uniqueValidator);
 PersonSchema.plugin(idValidator);
+
+export type PersonType = Document<Types.ObjectId, unknown, IPerson> &
+  IPerson & { _id: Types.ObjectId } & IPersonMethods;
 
 export default model<IPerson, PersonModel>("Person", PersonSchema, "people");

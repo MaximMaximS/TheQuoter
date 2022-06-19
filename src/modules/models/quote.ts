@@ -1,4 +1,4 @@
-import { Model, Schema, Types, model } from "mongoose";
+import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import { ServerError } from "../errors";
 import Class, { IReducedClass } from "./class";
@@ -112,5 +112,8 @@ QuoteSchema.method("reduce", async function () {
 });
 
 QuoteSchema.plugin(idValidator);
+
+export type QuoteType = Document<Types.ObjectId, unknown, IQuote> &
+  IQuote & { _id: Types.ObjectId } & IQuoteMethods;
 
 export default model<IQuote, QuoteModel>("Quote", QuoteSchema, "quotes");

@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
-import { Model, Schema, Types, model } from "mongoose";
+import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 import { ServerError, ValidatorError } from "../errors";
@@ -110,5 +110,8 @@ UserSchema.method("genToken", function () {
     }
   );
 });
+
+export type UserType = Document<Types.ObjectId, unknown, IUser> &
+  IUser & { _id: Types.ObjectId } & IUserMethods;
 
 export default model<IUser, UserModel>("User", UserSchema, "users");

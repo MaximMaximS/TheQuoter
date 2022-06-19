@@ -1,4 +1,4 @@
-import { Model, Schema, Types, model } from "mongoose";
+import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
@@ -47,5 +47,8 @@ ClassSchema.method("reduce", function (): IReducedClass {
 
 ClassSchema.plugin(uniqueValidator);
 ClassSchema.plugin(idValidator);
+
+export type ClassType = Document<Types.ObjectId, unknown, IClass> &
+  IClass & { _id: Types.ObjectId } & IClassMethods;
 
 export default model<IClass, ClassModel>("Class", ClassSchema, "classes");

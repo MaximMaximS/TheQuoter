@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { Types } from "mongoose";
-import Quote, { IReducedQuote } from "../models/quote";
+import Quote, { IReducedQuote, QuoteType } from "../models/quote";
+import { UserType } from "../models/user";
 import {
   ConflictError,
   ForbiddenError,
@@ -114,15 +115,7 @@ export async function createRoute(req: Request, res: Response) {
   res.status(user.role === "admin" ? 201 : 202).json({ _id });
 }
 
-// TODO
-// eslint-disable-next-line sonarjs/cognitive-complexity
-export async function editRoute(req: Request, res: Response) {
-  const user = await enforceRole(req.headers.authorization, "user");
-  const current = await Quote.findById(req.params.idValidator).exec();
-  if (current === null) {
-    throw new NotFoundError();
-  }
-
+function editPerm(current: QuoteType, user: UserType) {
   if (current.state === "public") {
     // Quote is public, so only admins can change it
 
@@ -146,6 +139,16 @@ export async function editRoute(req: Request, res: Response) {
       throw new ForbiddenError();
     }
   }
+}
+
+export async function editRoute(req: Request, res: Response) {
+  const user = await enforceRole(req.headers.authorization, "user");
+  const current = await Quote.findById(req.params.idValidator).exec();
+  if (current === null) {
+    throw new NotFoundError();
+  }
+
+  editPerm(current, user);
   // Edit the quotes
 
   const text = stringOrUndefined(req.body.text);
@@ -183,7 +186,7 @@ export async function editRoute(req: Request, res: Response) {
     }
   }
 
-  return await current.save();
+  await current.save();
 
   res.sendStatus(204);
 }
