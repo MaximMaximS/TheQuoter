@@ -1,12 +1,7 @@
 import { verify } from "jsonwebtoken";
 import { Types } from "mongoose";
 import User from "./models/user";
-import {
-  ForbiddenError,
-  IncorrectLoginError,
-  ServerError,
-  ValidatorError,
-} from "./errors";
+import { IncorrectLoginError, ServerError, ValidatorError } from "./errors";
 
 // Get user from authorization header
 export async function getUser(authHeader?: string) {
@@ -21,14 +16,14 @@ export async function getUser(authHeader?: string) {
     if (typeof uid === "string") {
       return;
     }
-    return (await User.findById(uid.id)) || undefined;
+    return (await User.findById(uid.id).exec()) || undefined;
   }
   return;
 }
 
 export async function enforceRole(
   authHeader: string | undefined,
-  role: "user" | "moderator" | "admin"
+  role: "user" | "moderator" | "admin" | Types.ObjectId
 ) {
   // Verify token
   const user = await getUser(authHeader);
@@ -36,27 +31,23 @@ export async function enforceRole(
   if (user === undefined) {
     throw new IncorrectLoginError();
   }
-  // User is always at least "user" so no need to check
-  switch (role) {
-    case "admin":
-      if (user.role !== "admin") {
-        throw new ForbiddenError();
-      }
-      break;
-    case "moderator":
-      if (user.role !== "admin" && user.role !== "moderator") {
-        throw new ForbiddenError();
-      }
-      break;
+  if (role !== "user") {
+    user.requirePermit(role);
   }
   return user;
 }
 
-export function stringOrUndefined(str?: unknown): string | undefined {
+export function stringOrUndefined(
+  str: unknown,
+  path: string
+): string | undefined {
+  if (str === undefined) {
+    return;
+  }
   if (typeof str === "string") {
     return str;
   }
-  return undefined;
+  throw new ValidatorError(path, "string");
 }
 
 export function string(str: unknown, path: string): string {
@@ -70,7 +61,7 @@ export function idOrUndefined(
   id: unknown,
   path: string
 ): Types.ObjectId | undefined {
-  const soru = stringOrUndefined(id);
+  const soru = stringOrUndefined(id, path);
   if (soru === undefined) {
     return undefined;
   }

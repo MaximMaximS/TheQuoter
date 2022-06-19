@@ -1,4 +1,3 @@
-import bcrypt from "bcrypt";
 import { MongoMemoryServer } from "mongodb-memory-server";
 import mongoose from "mongoose";
 import Class from "../src/modules/models/class";
@@ -35,13 +34,13 @@ export async function createUsers() {
   await User.create({
     username: "admin",
     email: "a.b@c.dd",
-    hash: await bcrypt.hash("admin", 12),
+    password: "adminadmin",
     role: "admin",
   });
   await User.create({
     username: "user",
     email: "e.f@g.hh",
-    hash: await bcrypt.hash("user", 12),
+    password: "useruser",
     role: "user",
   });
 }
@@ -50,7 +49,7 @@ export const classId = new mongoose.Types.ObjectId();
 
 export async function createClasses() {
   await createUsers();
-  const admin = await User.findOne({ username: "admin" });
+  const admin = await User.findOne({ username: "admin" }).exec();
   if (admin === null) {
     throw new Error("admin is null");
   }
@@ -65,13 +64,16 @@ export async function createClasses() {
   });
 }
 
+export const personId = new mongoose.Types.ObjectId();
+
 export async function createPeople() {
   await createUsers();
-  const admin = await User.findOne({ username: "admin" });
+  const admin = await User.findOne({ username: "admin" }).exec();
   if (admin === null) {
     throw new Error("admin is null");
   }
   await Person.create({
+    _id: personId,
     name: "teacher",
     type: "teacher",
     createdBy: admin._id,
@@ -87,11 +89,11 @@ export async function createPeople() {
 
 export async function createQuotes() {
   await createUsers();
-  const admin = await User.findOne({ username: "admin" });
+  const admin = await User.findOne({ username: "admin" }).exec();
   if (admin === null) {
     throw new Error("admin is null");
   }
-  const teacher = await Person.findOne({ name: "teacher" });
+  const teacher = await Person.findOne({ name: "teacher" }).exec();
   if (teacher === null) {
     throw new Error("teacher is null");
   }

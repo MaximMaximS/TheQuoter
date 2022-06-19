@@ -1,4 +1,4 @@
-import { Document, Schema, Types, model } from "mongoose";
+import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import { ServerError } from "../errors";
 import Class, { IReducedClass } from "./class";
@@ -11,11 +11,11 @@ export interface IReducedQuote {
   note?: string;
   originator: IReducedPerson;
   class?: IReducedClass;
-  state: "pending" | "public";
+  state: "pending" | "public" | "archived";
 }
 
-export interface IQuote extends Document {
-  state: "pending" | "public";
+interface IQuote {
+  state: "pending" | "public" | "archived";
   context?: string;
   text: string;
   note?: string;
@@ -25,17 +25,20 @@ export interface IQuote extends Document {
   approvedBy?: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
 
-  // Instance methods
+interface IQuoteMethods {
   reduce(): Promise<IReducedQuote>;
 }
 
-const QuoteSchema = new Schema<IQuote>(
+type QuoteModel = Model<IQuote, unknown, IQuoteMethods>;
+
+const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethods>(
   {
     state: {
       type: String,
-      enum: ["pending", "public"],
-      required: true,
+      enum: ["pending", "public", "archived"],
+      default: "pending",
     },
     context: {
       type: String,
@@ -90,14 +93,11 @@ const QuoteSchema = new Schema<IQuote>(
   }
 );
 
-QuoteSchema.plugin(idValidator);
-
-QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
-  // Keep only id, context, text, note, originator, class, and optionally state
-  const classDoc = await Class.findById(this.class);
-  const originatorDoc = await Person.findById(this.originator);
+QuoteSchema.method("reduce", async function () {
+  const classDoc = await Class.findById(this.class).exec();
+  const originatorDoc = await Person.findById(this.originator).exec();
   if (originatorDoc === null) {
-    throw new ServerError("Not found");
+    throw new ServerError(`Orginator for quote ${this._id} not found`);
   }
   const doc: IReducedQuote = {
     _id: this._id,
@@ -109,6 +109,11 @@ QuoteSchema.methods.reduce = async function (): Promise<IReducedQuote> {
     state: this.state,
   };
   return doc;
-};
+});
 
-export default model("Quote", QuoteSchema, "quotes");
+QuoteSchema.plugin(idValidator);
+
+export type QuoteType = Document<Types.ObjectId, unknown, IQuote> &
+  IQuote & { _id: Types.ObjectId } & IQuoteMethods;
+
+export default model<IQuote, QuoteModel>("Quote", QuoteSchema, "quotes");

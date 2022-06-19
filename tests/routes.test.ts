@@ -45,6 +45,17 @@ describe("people", () => {
   });
 });
 
+describe("classes", () => {
+  test("GET /classes", async () => {
+    await createClasses();
+    const res = await request(app)
+      .get("/classes")
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body).toHaveLength(2);
+  });
+});
+
 describe("users", () => {
   test("Register", async () => {
     await createClasses();
@@ -74,7 +85,7 @@ describe("users", () => {
       .post("/users/login")
       .send({
         username: "admin",
-        password: "admin",
+        password: "adminadmin",
       })
       .set("Content-Type", "application/json")
       .expect("Content-Type", /json/)
