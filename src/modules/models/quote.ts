@@ -20,6 +20,7 @@ const ReactionSchema = new Schema<IReaction, ReactionModel>({
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
+    unique: true,
   },
 });
 
