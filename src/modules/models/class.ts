@@ -2,16 +2,16 @@ import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
-export interface IReducedClass {
-  _id: Types.ObjectId;
-  name: string;
-}
-
 interface IClass {
   name: string;
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IReducedClass {
+  _id: Types.ObjectId;
+  name: string;
 }
 
 interface IClassMethods {

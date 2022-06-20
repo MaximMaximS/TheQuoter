@@ -4,12 +4,13 @@
 
 - [ ] Add logging
 - [ ] Add dialogs
-- [ ] Reactions
-  - [ ] Likes and dislikes
-  - [ ] Comments
 - [ ] Single Sign on / Sign in with Google
 
 ## In Progress
+
+- [ ] Reactions
+  - [ ] Likes and dislikes
+  - [ ] Comments
 
 ## Done ✓
 

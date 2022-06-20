@@ -4,18 +4,29 @@ import { ServerError } from "../errors";
 import Class, { IReducedClass } from "./class";
 import Person, { IReducedPerson } from "./person";
 
-export interface IReducedQuote {
-  _id: Types.ObjectId;
-  context?: string;
-  text: string;
-  note?: string;
-  originator: IReducedPerson;
-  class?: IReducedClass;
-  state: "pending" | "public" | "archived";
+interface IReaction {
+  user: Types.ObjectId;
+  like: boolean;
 }
 
+type ReactionModel = Model<IReaction>;
+
+const ReactionSchema = new Schema<IReaction, ReactionModel>({
+  user: {
+    type: Schema.Types.ObjectId,
+    ref: "User",
+    required: true,
+  },
+  like: {
+    type: Boolean,
+    required: true,
+  },
+});
+
+export type State = "pending" | "public" | "archived";
+
 interface IQuote {
-  state: "pending" | "public" | "archived";
+  state: State;
   context?: string;
   text: string;
   note?: string;
@@ -23,17 +34,30 @@ interface IQuote {
   class?: Types.ObjectId;
   createdBy: Types.ObjectId;
   approvedBy?: Types.ObjectId;
+  reactions: IReaction[];
   createdAt: Date;
   updatedAt: Date;
 }
 
-interface IQuoteMethods {
-  reduce(): Promise<IReducedQuote>;
+export interface IReducedQuote {
+  _id: Types.ObjectId;
+  context?: string;
+  text: string;
+  note?: string;
+  originator: IReducedPerson;
+  class?: IReducedClass;
+  state: State;
 }
 
-type QuoteModel = Model<IQuote, unknown, IQuoteMethods>;
+interface IQuoteMethodsAndOverrides {
+  reduce(): Promise<IReducedQuote>;
 
-const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethods>(
+  reactions: Types.DocumentArray<IReaction>;
+}
+
+type QuoteModel = Model<IQuote, unknown, IQuoteMethodsAndOverrides>;
+
+const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
   {
     state: {
       type: String,
@@ -87,6 +111,10 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethods>(
         return this.state === "public";
       },
     },
+    reactions: {
+      type: [ReactionSchema],
+      default: [],
+    },
   },
   {
     timestamps: true,
@@ -114,6 +142,6 @@ QuoteSchema.method("reduce", async function () {
 QuoteSchema.plugin(idValidator);
 
 export type QuoteType = Document<Types.ObjectId, unknown, IQuote> &
-  IQuote & { _id: Types.ObjectId } & IQuoteMethods;
+  IQuote & { _id: Types.ObjectId } & IQuoteMethodsAndOverrides;
 
 export default model<IQuote, QuoteModel>("Quote", QuoteSchema, "quotes");
