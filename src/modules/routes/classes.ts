@@ -1,9 +1,9 @@
 import { Request, Response } from "express";
 import Class from "../models/class";
 import { NotFoundError } from "../errors";
-import { enforceRole, string, stringOrUndefined } from "../utils";
+import { enforcePermit, string, stringOrUndefined } from "../utils";
 
-export async function getRoute(req: Request, res: Response) {
+export async function getClassRoute(req: Request, res: Response) {
   const classFound = await Class.findById(req.params.id).exec();
   if (classFound === null) {
     throw new NotFoundError();
@@ -11,7 +11,7 @@ export async function getRoute(req: Request, res: Response) {
   res.json(classFound.reduce());
 }
 
-export async function searchRoute(req: Request, res: Response) {
+export async function searchClassesRoute(req: Request, res: Response) {
   const name = stringOrUndefined(req.query.name, "name");
   let query = Class.find();
   if (name !== undefined) {
@@ -24,8 +24,8 @@ export async function searchRoute(req: Request, res: Response) {
   res.json(classesFound);
 }
 
-export async function createRoute(req: Request, res: Response) {
-  const user = await enforceRole(req.headers.authorization, "admin");
+export async function createClassRoute(req: Request, res: Response) {
+  const user = await enforcePermit(req.headers.authorization, "admin");
   const name = string(req.body.name, "name");
   const { _id } = await Class.create({
     name,

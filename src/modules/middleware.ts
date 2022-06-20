@@ -5,17 +5,24 @@ import {
   TokenExpiredError,
 } from "jsonwebtoken";
 import { Error } from "mongoose";
-import * as errors from "./errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  IncorrectLoginError,
+  NotFoundError,
+  ValidatorError,
+  genValidatorMessage,
+} from "./errors";
 
 export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  if (err instanceof errors.ValidatorError) {
+  if (err instanceof ValidatorError) {
     res.status(400).json({
       message: err.message,
       path: err.path,
       kind: err.kind,
     });
   } else if (
-    err instanceof errors.IncorrectLoginError ||
+    err instanceof IncorrectLoginError ||
     err instanceof TokenExpiredError ||
     err instanceof NotBeforeError ||
     err instanceof JsonWebTokenError
@@ -25,15 +32,15 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     // Extract first, possible TODO to send all of them
     const first = err.errors[Object.keys(err.errors)[0]];
     res.status(400).json({
-      message: errors.genValidatorMessage(first.path, first.kind),
+      message: genValidatorMessage(first.path, first.kind),
       path: first.path,
       kind: first.kind,
     });
-  } else if (err instanceof errors.NotFoundError) {
+  } else if (err instanceof NotFoundError) {
     next();
-  } else if (err instanceof errors.ForbiddenError) {
+  } else if (err instanceof ForbiddenError) {
     res.sendStatus(403);
-  } else if (err instanceof errors.ConflictError) {
+  } else if (err instanceof ConflictError) {
     res.sendStatus(409);
   } else {
     // Unhandled error

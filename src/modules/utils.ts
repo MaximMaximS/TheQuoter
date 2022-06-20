@@ -21,9 +21,10 @@ export async function getUser(authHeader?: string) {
   return;
 }
 
-export async function enforceRole(
+// Get user from request and check if user has permit
+export async function enforcePermit(
   authHeader: string | undefined,
-  role: "user" | "moderator" | "admin" | Types.ObjectId
+  permit: "user" | "moderator" | "admin" | Types.ObjectId
 ) {
   // Verify token
   const user = await getUser(authHeader);
@@ -31,12 +32,13 @@ export async function enforceRole(
   if (user === undefined) {
     throw new IncorrectLoginError();
   }
-  if (role !== "user") {
-    user.requirePermit(role);
+  if (permit !== "user") {
+    user.requirePermit(permit);
   }
   return user;
 }
 
+// Return string, undefined, or throw error
 export function stringOrUndefined(
   str: unknown,
   path: string
@@ -50,6 +52,7 @@ export function stringOrUndefined(
   throw new ValidatorError(path, "string");
 }
 
+// Return string or throw error
 export function string(str: unknown, path: string): string {
   if (typeof str === "string") {
     return str;
@@ -57,6 +60,7 @@ export function string(str: unknown, path: string): string {
   throw new ValidatorError(path, "required");
 }
 
+// Return id, undefined, or throw error
 export function idOrUndefined(
   id: unknown,
   path: string
@@ -71,6 +75,7 @@ export function idOrUndefined(
   return new Types.ObjectId(soru);
 }
 
+// Return id or throw error
 export function id(id: unknown, path: string): Types.ObjectId {
   const soru = string(id, path);
   if (!Types.ObjectId.isValid(soru)) {
