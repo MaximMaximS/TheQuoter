@@ -5,22 +5,69 @@ import Class, { IReducedClass } from "./class";
 import Person, { IReducedPerson } from "./person";
 
 interface IReaction {
-  user: Types.ObjectId;
   like: boolean;
+  user: Types.ObjectId;
 }
 
 type ReactionModel = Model<IReaction>;
 
 const ReactionSchema = new Schema<IReaction, ReactionModel>({
+  like: {
+    type: Boolean,
+    required: true,
+  },
   user: {
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
   },
-  like: {
-    type: Boolean,
-    required: true,
+});
+
+ReactionSchema.plugin(idValidator);
+
+function countLikes(arr: IReaction[]): number {
+  return arr.filter((el) => el.like).length;
+}
+
+interface IComment {
+  text: string;
+  user: Types.ObjectId;
+  reactions: IReaction[];
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface ICommentMethods {
+  resolveLikes(): number;
+}
+
+type CommentModel = Model<IComment, unknown, ICommentMethods>;
+
+const CommentSchema = new Schema<IComment, CommentModel, ICommentMethods>(
+  {
+    text: {
+      type: String,
+      maxlength: 256,
+      trim: true,
+      required: true,
+    },
+    user: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+    reactions: {
+      type: [ReactionSchema],
+      default: [],
+    },
   },
+  { timestamps: true }
+);
+
+CommentSchema.plugin(idValidator);
+
+CommentSchema.method<IComment>("resolveLikes", function () {
+  return countLikes(this.reactions);
 });
 
 export type State = "pending" | "public" | "archived";
@@ -51,11 +98,15 @@ export interface IReducedQuote {
 
 interface IQuoteMethodsAndOverrides {
   reduce(): Promise<IReducedQuote>;
+  resolveLikes(): number;
 
   reactions: Types.DocumentArray<IReaction>;
 }
 
 type QuoteModel = Model<IQuote, unknown, IQuoteMethodsAndOverrides>;
+
+export type QuoteType = Document<Types.ObjectId, unknown, IQuote> &
+  IQuote & { _id: Types.ObjectId } & IQuoteMethodsAndOverrides;
 
 const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
   {
@@ -121,27 +172,31 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
   }
 );
 
-QuoteSchema.method("reduce", async function () {
-  const classDoc = await Class.findById(this.class).exec();
-  const originatorDoc = await Person.findById(this.originator).exec();
-  if (originatorDoc === null) {
-    throw new ServerError(`Orginator for quote ${this._id} not found`);
+QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
+  "reduce",
+  async function () {
+    const classDoc = await Class.findById(this.class).exec();
+    const originatorDoc = await Person.findById(this.originator).exec();
+    if (originatorDoc === null) {
+      throw new ServerError(`Orginator for quote ${this._id} not found`);
+    }
+    const doc: IReducedQuote = {
+      _id: this._id,
+      context: this.context,
+      text: this.text,
+      note: this.note,
+      originator: originatorDoc.reduce(),
+      class: classDoc !== null ? classDoc.reduce() : undefined,
+      state: this.state,
+    };
+    return doc;
   }
-  const doc: IReducedQuote = {
-    _id: this._id,
-    context: this.context,
-    text: this.text,
-    note: this.note,
-    originator: originatorDoc.reduce(),
-    class: classDoc !== null ? classDoc.reduce() : undefined,
-    state: this.state,
-  };
-  return doc;
+);
+
+QuoteSchema.method<IQuote>("resolveLikes", function () {
+  return countLikes(this.reactions);
 });
 
 QuoteSchema.plugin(idValidator);
-
-export type QuoteType = Document<Types.ObjectId, unknown, IQuote> &
-  IQuote & { _id: Types.ObjectId } & IQuoteMethodsAndOverrides;
 
 export default model<IQuote, QuoteModel>("Quote", QuoteSchema, "quotes");
