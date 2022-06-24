@@ -100,7 +100,7 @@ UserSchema.method<UserType>("isValidPassword", function (password: string) {
 });
 
 UserSchema.method<UserType>("genToken", function () {
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env["JWT_SECRET"];
   if (secret === undefined) {
     throw new ServerError("JWT_SECRET is undefined");
   }

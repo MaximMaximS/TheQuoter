@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Class from "../models/class";
 import { NotFoundError } from "../errors";
 import { enforcePermit, string, stringOrUndefined } from "../utils";
 
 export async function getClassRoute(req: Request, res: Response) {
-  const classFound = await Class.findById(req.params.id).exec();
+  const classFound = await Class.findById(req.params["id"]).exec();
   if (classFound === null) {
     throw new NotFoundError();
   }
@@ -12,7 +12,7 @@ export async function getClassRoute(req: Request, res: Response) {
 }
 
 export async function searchClassesRoute(req: Request, res: Response) {
-  const name = stringOrUndefined(req.query.name, "name");
+  const name = stringOrUndefined(req.query["name"], "name");
   let query = Class.find();
   if (name !== undefined) {
     query = query.where("name").regex(name, "i");

@@ -1,10 +1,10 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Person from "../models/person";
 import { NotFoundError } from "../errors";
 import { enforcePermit, string, stringOrUndefined } from "../utils";
 
 export async function getPersonRoute(req: Request, res: Response) {
-  const personFound = await Person.findById(req.params.id).exec();
+  const personFound = await Person.findById(req.params["id"]).exec();
   if (personFound === null) {
     throw new NotFoundError();
   }
@@ -12,8 +12,8 @@ export async function getPersonRoute(req: Request, res: Response) {
 }
 
 export async function searchPeopleRoute(req: Request, res: Response) {
-  const name = stringOrUndefined(req.query.name, "name");
-  const type = stringOrUndefined(req.query.type, "type");
+  const name = stringOrUndefined(req.query["name"], "name");
+  const type = stringOrUndefined(req.query["type"], "type");
 
   let query = Person.find();
   if (name !== undefined) {

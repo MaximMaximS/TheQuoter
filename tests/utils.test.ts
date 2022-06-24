@@ -24,7 +24,7 @@ describe("utils", () => {
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(ServerError);
 
     // Throw error if token is invalid
-    process.env.JWT_SECRET = "secret";
+    process.env["JWT_SECRET"] = "secret";
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(
       JsonWebTokenError
     );

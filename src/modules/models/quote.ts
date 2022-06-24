@@ -20,15 +20,10 @@ const ReactionSchema = new Schema<IReaction, ReactionModel>({
     type: Schema.Types.ObjectId,
     ref: "User",
     required: true,
-    unique: true,
   },
 });
 
 ReactionSchema.plugin(idValidator);
-
-function countLikes(arr: IReaction[]): number {
-  return arr.filter((el) => el.like).length;
-}
 
 interface IComment {
   text: string;
@@ -40,6 +35,8 @@ interface IComment {
 
 interface ICommentMethods {
   resolveLikes(): number;
+
+  reactions: Types.DocumentArray<IReaction>;
 }
 
 type CommentModel = Model<IComment, unknown, ICommentMethods>;
@@ -68,20 +65,35 @@ const CommentSchema = new Schema<IComment, CommentModel, ICommentMethods>(
 CommentSchema.plugin(idValidator);
 
 CommentSchema.method<IComment>("resolveLikes", function () {
-  return countLikes(this.reactions);
+  return this.reactions.filter((el) => el.like).length;
 });
+
+/*
+CommentSchema.method<IComment>("react", function (like: boolean, user: Types.ObjectId) {
+  this.populate("reactions");
+  const reaction = this.reactions.find((el) => el.user.equals(user));
+  if (reaction === undefined) {
+    this.reactions.push({ like, user });
+  } else {
+    reaction.like = like;
+  }
+  this.save();
+}
+
+});
+*/
 
 export type State = "pending" | "public" | "archived";
 
 interface IQuote {
   state: State;
-  context?: string;
+  context?: string | undefined;
   text: string;
-  note?: string;
+  note?: string | undefined;
   originator: Types.ObjectId;
-  class?: Types.ObjectId;
+  class?: Types.ObjectId | undefined;
   createdBy: Types.ObjectId;
-  approvedBy?: Types.ObjectId;
+  approvedBy?: Types.ObjectId | undefined;
   reactions: IReaction[];
   createdAt: Date;
   updatedAt: Date;
@@ -89,11 +101,11 @@ interface IQuote {
 
 export interface IReducedQuote {
   _id: Types.ObjectId;
-  context?: string;
+  context: string | undefined;
   text: string;
-  note?: string;
+  note: string | undefined;
   originator: IReducedPerson;
-  class?: IReducedClass;
+  class: IReducedClass | undefined;
   state: State;
 }
 
@@ -195,7 +207,7 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
 );
 
 QuoteSchema.method<IQuote>("resolveLikes", function () {
-  return countLikes(this.reactions);
+  return this.reactions.filter((el) => el.like).length;
 });
 
 QuoteSchema.plugin(idValidator);
