@@ -1,4 +1,4 @@
-import { ErrorRequestHandler, Request, Response } from "express";
+import type { ErrorRequestHandler, Request, Response } from "express";
 import {
   JsonWebTokenError,
   NotBeforeError,
@@ -14,7 +14,7 @@ import {
   genValidatorMessage,
 } from "./errors";
 
-export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
+export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   if (err instanceof ValidatorError) {
     res.status(400).json({
       message: err.message,
@@ -30,12 +30,25 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     res.sendStatus(401);
   } else if (err instanceof Error.ValidationError) {
     // Extract first, possible TODO to send all of them
-    const first = err.errors[Object.keys(err.errors)[0]];
-    res.status(400).json({
-      message: genValidatorMessage(first.path, first.kind),
-      path: first.path,
-      kind: first.kind,
-    });
+    const name = Object.keys(err.errors)[0];
+    if (name === undefined) {
+      res.status(500).json({
+        message: "Error returning broken in validation",
+      });
+    } else {
+      const first = err.errors[name];
+      if (first === undefined) {
+        res.status(500).json({
+          message: "Error returning broken in validation",
+        });
+      } else {
+        res.status(400).json({
+          message: genValidatorMessage(first.path, first.kind),
+          path: first.path,
+          kind: first.kind,
+        });
+      }
+    }
   } else if (err instanceof NotFoundError) {
     next();
   } else if (err instanceof ForbiddenError) {
@@ -49,10 +62,10 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 };
 
-export function notFound(req: Request, res: Response) {
+export function notFound(_req: Request, res: Response) {
   res.sendStatus(404);
 }
 
-export function methodNotAllowed(req: Request, res: Response) {
+export function methodNotAllowed(_req: Request, res: Response) {
   res.sendStatus(405);
 }

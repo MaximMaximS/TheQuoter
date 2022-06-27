@@ -2,19 +2,25 @@ import "dotenv/config";
 import mongoose from "mongoose";
 import app from "./modules/app";
 
+let port = 3000;
+if (process.env["PORT"] !== undefined) {
+  port = Number.parseInt(process.env["PORT"]);
+  if (Number.isNaN(port)) {
+    throw new SyntaxError("PORT is not a number");
+  }
+}
+
 async function main() {
   // No args - all arg passes with ENViroment
-  if (process.env.MONGODB_URI === undefined) {
+  if (process.env["MONGODB_URI"] === undefined) {
     throw new Error("MONGODB_URI is not defined");
   }
 
-  await mongoose.connect(process.env.MONGODB_URI);
-
-  const PORT = process.env.PORT || 3000; // If no port is supplied, run on 3000
+  await mongoose.connect(process.env["MONGODB_URI"]);
 
   // Run the server
-  app.listen(PORT, async () => {
-    console.info(`Server running on http://localhost:${PORT}`);
+  app.listen(port, async () => {
+    console.info(`Server running on http://localhost:${port}`);
   });
 }
 
