@@ -68,21 +68,6 @@ CommentSchema.method<IComment>("resolveLikes", function () {
   return this.reactions.filter((el) => el.like).length;
 });
 
-/*
-CommentSchema.method<IComment>("react", function (like: boolean, user: Types.ObjectId) {
-  this.populate("reactions");
-  const reaction = this.reactions.find((el) => el.user.equals(user));
-  if (reaction === undefined) {
-    this.reactions.push({ like, user });
-  } else {
-    reaction.like = like;
-  }
-  this.save();
-}
-
-});
-*/
-
 export type State = "pending" | "public" | "archived";
 
 interface IQuote {

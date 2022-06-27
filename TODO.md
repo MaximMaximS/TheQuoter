@@ -6,11 +6,13 @@
 - [ ] Add dialogs
 - [ ] Single Sign on / Sign in with Google
 
-## In Progress
+### Postponed
 
 - [ ] Reactions
   - [ ] Likes and dislikes
   - [ ] Comments
+
+## In Progress
 
 ## Done ✓
 

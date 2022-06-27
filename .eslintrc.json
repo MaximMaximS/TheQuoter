@@ -38,16 +38,14 @@
     "no-confusing-arrow": "error",
     "prefer-const": "error",
     "no-use-before-define": "error",
+    "no-unneeded-ternary": "error",
+    "no-console": "off",
     "unicorn/prevent-abbreviations": "off",
     "node/no-unsupported-features/es-syntax": "off",
     "node/no-missing-import": "off",
     "node/no-unpublished-import": "off",
-    "import/no-namespace": "off",
-    "no-console": "off",
-    "sonarjs/no-redundant-jump": "off",
-    "no-unneeded-ternary": "error",
     "sonarjs/no-duplicate-string": "off",
-    "unicorn/prefer-module": "off"
+    "sonarjs/no-redundant-jump": "off"
   },
   "ignorePatterns": ["**/node_modules/**", "**/dist/**"]
 }
