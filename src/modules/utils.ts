@@ -21,6 +21,8 @@ export async function getUser(authHeader?: string) {
       return user;
     }
   }
+  // Required due to typescript
+  // eslint-disable-next-line sonarjs/no-redundant-jump
   return;
 }
 
