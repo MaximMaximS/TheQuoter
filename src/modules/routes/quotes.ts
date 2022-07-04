@@ -109,7 +109,7 @@ function editPerm(current: QuoteType, user: UserType) {
 
 export async function editRoute(req: Request, res: Response) {
   const user = await enforceRole(req.headers.authorization, "user");
-  const current = await Quote.findById(req.params.idValidator).exec();
+  const current = await Quote.findById(req.params.id).exec();
   if (current === null) {
     throw new NotFoundError();
   }
