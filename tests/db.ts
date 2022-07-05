@@ -7,6 +7,8 @@ import User from "../src/modules/models/user";
 
 let mongod: MongoMemoryServer | undefined;
 
+jest.setTimeout(30_000);
+
 export async function init() {
   mongod = await MongoMemoryServer.create();
   mongoose.connect(mongod.getUri());
@@ -23,10 +25,8 @@ export async function closeDatabase() {
 
 export async function clearDatabase() {
   const collections = mongoose.connection.collections;
-
-  for (const key in collections) {
-    const collection = collections[key];
-    await collection.deleteMany({});
+  for (const [, value] of Object.entries(collections)) {
+    await value.deleteMany({});
   }
 }
 

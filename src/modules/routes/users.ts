@@ -1,9 +1,9 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import User from "../models/user";
 import { ForbiddenError, IncorrectLoginError, NotFoundError } from "../errors";
-import { enforceRole, id, string } from "../utils";
+import { enforcePermit, id, string } from "../utils";
 
-export async function registerRoute(req: Request, res: Response) {
+export async function registerUserRoute(req: Request, res: Response) {
   // Try to create a new user
   const user = await User.create({
     username: string(req.body.username, "username"),
@@ -31,7 +31,7 @@ async function login(username: string, password: string) {
   return user;
 }
 
-export async function loginRoute(req: Request, res: Response) {
+export async function loginUserRoute(req: Request, res: Response) {
   const user = await login(
     string(req.body.username, "username"),
     string(req.body.password, "password")
@@ -42,9 +42,9 @@ export async function loginRoute(req: Request, res: Response) {
   });
 }
 
-export async function getRoute(req: Request, res: Response) {
-  const cUser = await enforceRole(req.headers.authorization, "user");
-  const user = await User.findById(req.params.id).exec();
+export async function getUserRoute(req: Request, res: Response) {
+  const cUser = await enforcePermit(req.headers.authorization, "user");
+  const user = await User.findById(req.params["id"]).exec();
   if (user === null) {
     throw new NotFoundError();
   }
@@ -55,8 +55,8 @@ export async function getRoute(req: Request, res: Response) {
 }
 
 // TODO
-export async function deleteRoute(req: Request, res: Response) {
-  if (process.env.NODE_ENV !== "development") {
+export async function deleteUserRoute(req: Request, res: Response) {
+  if (process.env["NODE_ENV"] !== "development") {
     throw new NotFoundError();
   }
   const user = await login(

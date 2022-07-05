@@ -1,22 +1,23 @@
-import { Request, Response } from "express";
+import type { Request, Response } from "express";
 import Quote, { QuoteType } from "../models/quote";
-import { UserType } from "../models/user";
+import type { UserType } from "../models/user";
 import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  ServerError,
   ValidatorError,
 } from "../errors";
 import {
-  enforceRole,
+  enforcePermit,
   id,
   idOrUndefined,
   string,
   stringOrUndefined,
 } from "../utils";
 
-export async function getRoute(req: Request, res: Response) {
-  const quoteFound = await Quote.findById(req.params.id).exec();
+export async function getQuoteRoute(req: Request, res: Response) {
+  const quoteFound = await Quote.findById(req.params["id"]).exec();
   if (quoteFound === null) {
     throw new NotFoundError();
   }
@@ -24,25 +25,25 @@ export async function getRoute(req: Request, res: Response) {
   res.json(reducedQuote);
 }
 
-export async function searchRoute(req: Request, res: Response) {
+export async function searchQuotesRoute(req: Request, res: Response) {
   // Public is fine, but if it's not, we need to check if the user is an admin
-  const state = req.query.state;
+  const state = req.query["state"];
   if (state === "pending" || state === "archived") {
-    await enforceRole(req.headers.authorization, "admin");
+    await enforcePermit(req.headers.authorization, "admin");
   } else if (state !== undefined && state !== "public") {
     throw new ValidatorError("state", "state");
   }
 
   let query = Quote.find();
-  const originator = idOrUndefined(req.query.originator, "originator");
+  const originator = idOrUndefined(req.query["originator"], "originator");
   if (originator !== undefined) {
     query = query.where("originator").equals(originator);
   }
-  const classId = idOrUndefined(req.query.class, "class");
+  const classId = idOrUndefined(req.query["class"], "class");
   if (classId !== undefined) {
     query = query.where("class").equals(classId);
   }
-  const text = stringOrUndefined(req.query.text, "text");
+  const text = stringOrUndefined(req.query["text"], "text");
   if (text !== undefined) {
     query = query.where("text").regex(text, "i");
   }
@@ -57,8 +58,8 @@ export async function searchRoute(req: Request, res: Response) {
   res.json(quotesFound); // Send the found enteries
 }
 
-export async function createRoute(req: Request, res: Response) {
-  const user = await enforceRole(req.headers.authorization, "user");
+export async function createQuoteRoute(req: Request, res: Response) {
+  const user = await enforcePermit(req.headers.authorization, "user");
   const classId = idOrUndefined(req.body.class, "class");
 
   let state: "public" | "pending" = "pending";
@@ -107,9 +108,9 @@ function editPerm(current: QuoteType, user: UserType) {
   }
 }
 
-export async function editRoute(req: Request, res: Response) {
-  const user = await enforceRole(req.headers.authorization, "user");
-  const current = await Quote.findById(req.params.id).exec();
+export async function editQuoteRoute(req: Request, res: Response) {
+  const user = await enforcePermit(req.headers.authorization, "user");
+  const current = await Quote.findById(req.params["id"]).exec();
   if (current === null) {
     throw new NotFoundError();
   }
@@ -157,14 +158,14 @@ export async function editRoute(req: Request, res: Response) {
   res.sendStatus(204);
 }
 
-export async function stateRoute(req: Request, res: Response) {
+export async function setQuoteStateRoute(req: Request, res: Response) {
   const state = string(req.body.state, "state");
   if (state !== "public" && state !== "pending" && state !== "archived") {
     throw new ValidatorError("state", "state");
   }
 
-  const user = await enforceRole(req.headers.authorization, "user");
-  const current = await Quote.findById(req.params.id).exec();
+  const user = await enforcePermit(req.headers.authorization, "user");
+  const current = await Quote.findById(req.params["id"]).exec();
   if (current === null) {
     throw new NotFoundError();
   }
@@ -199,19 +200,22 @@ export async function stateRoute(req: Request, res: Response) {
   res.sendStatus(204);
 }
 
-export async function randomRoute(req: Request, res: Response) {
+export async function randomQuoteRoute(_req: Request, res: Response) {
   const quotes = await Quote.find({
     state: "public",
     class: { $exists: false },
   }).exec();
   const quote = quotes[Math.floor(Math.random() * quotes.length)];
+  if (quote === undefined) {
+    throw new ServerError("Quote randomization failed");
+  }
   res.json(await quote.reduce());
 }
 
 // Quote must be users own pending quote or user must be admin
-export async function deleteRoute(req: Request, res: Response) {
-  const user = await enforceRole(req.headers.authorization, "user");
-  const quote = await Quote.findById(req.params.id).exec();
+export async function deleteQuoteRoute(req: Request, res: Response) {
+  const user = await enforcePermit(req.headers.authorization, "user");
+  const quote = await Quote.findById(req.params["id"]).exec();
   if (quote === null) {
     throw new NotFoundError();
   }

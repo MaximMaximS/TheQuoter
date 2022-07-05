@@ -5,14 +5,6 @@ import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 import { ForbiddenError, ServerError, ValidatorError } from "../errors";
 
-export interface IReducedUser {
-  _id: Types.ObjectId;
-  username: string;
-  email: string;
-  role: "admin" | "moderator" | "user";
-  class: Types.ObjectId;
-}
-
 interface IUser {
   username: string;
   password: string;
@@ -21,6 +13,14 @@ interface IUser {
   class: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IReducedUser {
+  _id: Types.ObjectId;
+  username: string;
+  email: string;
+  role: "admin" | "moderator" | "user";
+  class: Types.ObjectId;
 }
 
 interface IUserMethods {
@@ -100,7 +100,7 @@ UserSchema.method<UserType>("isValidPassword", function (password: string) {
 });
 
 UserSchema.method<UserType>("genToken", function () {
-  const secret = process.env.JWT_SECRET;
+  const secret = process.env["JWT_SECRET"];
   if (secret === undefined) {
     throw new ServerError("JWT_SECRET is undefined");
   }

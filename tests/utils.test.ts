@@ -3,6 +3,8 @@ import { Types } from "mongoose";
 import { ServerError, ValidatorError } from "../src/modules/errors";
 import * as utils from "../src/modules/utils";
 
+jest.setTimeout(30_000);
+
 describe("utils", () => {
   // Mock environment variables
   const env = process.env;
@@ -24,7 +26,7 @@ describe("utils", () => {
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(ServerError);
 
     // Throw error if token is invalid
-    process.env.JWT_SECRET = "secret";
+    process.env["JWT_SECRET"] = "secret";
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(
       JsonWebTokenError
     );

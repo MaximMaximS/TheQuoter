@@ -1,21 +1,28 @@
-import { ErrorRequestHandler, Request, Response } from "express";
+import type { ErrorRequestHandler, Request, Response } from "express";
 import {
   JsonWebTokenError,
   NotBeforeError,
   TokenExpiredError,
 } from "jsonwebtoken";
 import { Error } from "mongoose";
-import * as errors from "./errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  IncorrectLoginError,
+  NotFoundError,
+  ValidatorError,
+  genValidatorMessage,
+} from "./errors";
 
-export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
-  if (err instanceof errors.ValidatorError) {
+export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
+  if (err instanceof ValidatorError) {
     res.status(400).json({
       message: err.message,
       path: err.path,
       kind: err.kind,
     });
   } else if (
-    err instanceof errors.IncorrectLoginError ||
+    err instanceof IncorrectLoginError ||
     err instanceof TokenExpiredError ||
     err instanceof NotBeforeError ||
     err instanceof JsonWebTokenError
@@ -23,17 +30,30 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
     res.sendStatus(401);
   } else if (err instanceof Error.ValidationError) {
     // Extract first, possible TODO to send all of them
-    const first = err.errors[Object.keys(err.errors)[0]];
-    res.status(400).json({
-      message: errors.genValidatorMessage(first.path, first.kind),
-      path: first.path,
-      kind: first.kind,
-    });
-  } else if (err instanceof errors.NotFoundError) {
+    const name = Object.keys(err.errors)[0];
+    if (name === undefined) {
+      res.status(500).json({
+        message: "Error returning broken in validation",
+      });
+    } else {
+      const first = err.errors[name];
+      if (first === undefined) {
+        res.status(500).json({
+          message: "Error returning broken in validation",
+        });
+      } else {
+        res.status(400).json({
+          message: genValidatorMessage(first.path, first.kind),
+          path: first.path,
+          kind: first.kind,
+        });
+      }
+    }
+  } else if (err instanceof NotFoundError) {
     next();
-  } else if (err instanceof errors.ForbiddenError) {
+  } else if (err instanceof ForbiddenError) {
     res.sendStatus(403);
-  } else if (err instanceof errors.ConflictError) {
+  } else if (err instanceof ConflictError) {
     res.sendStatus(409);
   } else {
     // Unhandled error
@@ -42,10 +62,10 @@ export const errorHandler: ErrorRequestHandler = (err, req, res, next) => {
   }
 };
 
-export function notFound(req: Request, res: Response) {
+export function notFound(_req: Request, res: Response) {
   res.sendStatus(404);
 }
 
-export function methodNotAllowed(req: Request, res: Response) {
+export function methodNotAllowed(_req: Request, res: Response) {
   res.sendStatus(405);
 }

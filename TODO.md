@@ -4,10 +4,13 @@
 
 - [ ] Add logging
 - [ ] Add dialogs
+- [ ] Single Sign on / Sign in with Google
+
+### Postponed
+
 - [ ] Reactions
   - [ ] Likes and dislikes
   - [ ] Comments
-- [ ] Single Sign on / Sign in with Google
 
 ## In Progress
 

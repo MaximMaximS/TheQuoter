@@ -2,18 +2,18 @@ import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
-export interface IReducedPerson {
-  _id: Types.ObjectId;
-  name: string;
-  type: string;
-}
-
 interface IPerson {
   name: string;
   type: "teacher" | "student" | "other";
   createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
+}
+
+export interface IReducedPerson {
+  _id: Types.ObjectId;
+  name: string;
+  type: string;
 }
 
 interface IPersonMethods {

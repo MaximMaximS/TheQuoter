@@ -10,6 +10,8 @@ import {
   init,
 } from "./db";
 
+jest.setTimeout(30_000);
+
 beforeAll(async () => {
   await init();
 });
@@ -59,7 +61,7 @@ describe("classes", () => {
 describe("users", () => {
   test("Register", async () => {
     await createClasses();
-    process.env.JWT_SECRET = "secret";
+    process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
       .post("/users")
       .send({
@@ -80,7 +82,7 @@ describe("users", () => {
 
   test("Login", async () => {
     await createUsers();
-    process.env.JWT_SECRET = "secret";
+    process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
       .post("/users/login")
       .send({

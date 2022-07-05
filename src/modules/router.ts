@@ -1,10 +1,31 @@
 import { Router } from "express";
 import asyncMiddleware from "middleware-async";
-import * as classes from "./routes/classes";
-import * as misc from "./routes/misc";
-import * as people from "./routes/people";
-import * as quotes from "./routes/quotes";
-import * as users from "./routes/users";
+import {
+  createClassRoute,
+  getClassRoute,
+  searchClassesRoute,
+} from "./routes/classes";
+import { echoRoute, its5Route } from "./routes/misc";
+import {
+  createPersonRoute,
+  getPersonRoute,
+  searchPeopleRoute,
+} from "./routes/people";
+import {
+  createQuoteRoute,
+  deleteQuoteRoute,
+  editQuoteRoute,
+  getQuoteRoute,
+  randomQuoteRoute,
+  searchQuotesRoute,
+  setQuoteStateRoute,
+} from "./routes/quotes";
+import {
+  deleteUserRoute,
+  getUserRoute,
+  loginUserRoute,
+  registerUserRoute,
+} from "./routes/users";
 import { methodNotAllowed } from "./middleware";
 
 const router = Router();
@@ -12,81 +33,80 @@ const router = Router();
 router
   .route("/users")
   // Register
-  .post(asyncMiddleware(users.registerRoute))
+  .post(asyncMiddleware(registerUserRoute))
   // Delete OWN user (development only)
-  .delete(asyncMiddleware(users.deleteRoute))
+  .delete(asyncMiddleware(deleteUserRoute))
   .all(methodNotAllowed);
 
-router.route("/users/:id").get(asyncMiddleware(users.getRoute));
+router.route("/users/:id").get(asyncMiddleware(getUserRoute));
 
 router
   .route("/users/login")
   // Login
-  .post(asyncMiddleware(users.loginRoute))
+  .post(asyncMiddleware(loginUserRoute))
   .all(methodNotAllowed);
 
 router
   .route("/classes")
   // Search classes
-  .get(asyncMiddleware(classes.searchRoute))
+  .get(asyncMiddleware(searchClassesRoute))
   // Create a class
-  .post(asyncMiddleware(classes.createRoute))
+  .post(asyncMiddleware(createClassRoute))
   .all(methodNotAllowed);
 
 router
   .route("/classes/:id")
   // Get class
-  .get(asyncMiddleware(classes.getRoute))
+  .get(asyncMiddleware(getClassRoute))
   .all(methodNotAllowed);
 
 router
   .route("/people")
   // Search people
-  .get(asyncMiddleware(people.searchRoute))
+  .get(asyncMiddleware(searchPeopleRoute))
   // Create person
-  .post(asyncMiddleware(people.createRoute))
+  .post(asyncMiddleware(createPersonRoute))
   .all(methodNotAllowed);
 
 router
   .route("/people/:id")
   // Get person
-  .get(asyncMiddleware(people.getRoute))
+  .get(asyncMiddleware(getPersonRoute))
   .all(methodNotAllowed);
 
 router
   .route("/quotes")
   // Search quotes
-  .get(asyncMiddleware(quotes.searchRoute))
+  .get(asyncMiddleware(searchQuotesRoute))
   // Create quote
-  .post(asyncMiddleware(quotes.createRoute))
+  .post(asyncMiddleware(createQuoteRoute))
   .all(methodNotAllowed);
 
 router
   .route("/quotes/random")
   // Get random quote
-  .get(asyncMiddleware(quotes.randomRoute))
+  .get(asyncMiddleware(randomQuoteRoute))
   .all(methodNotAllowed);
 
 router
   .route("/quotes/:id")
   // Get a quote by id
-  .get(asyncMiddleware(quotes.getRoute))
+  .get(asyncMiddleware(getQuoteRoute))
   // Edit a quote
-  .put(asyncMiddleware(quotes.editRoute))
+  .put(asyncMiddleware(editQuoteRoute))
   // Delete a quote
-  .delete(asyncMiddleware(quotes.deleteRoute))
+  .delete(asyncMiddleware(deleteQuoteRoute))
   .all(methodNotAllowed);
 
 router
   .route("/quotes/:id/state")
-  // Publish (TODO: change to publish)
-  .post(asyncMiddleware(quotes.stateRoute))
+  .post(asyncMiddleware(setQuoteStateRoute))
   .all(methodNotAllowed);
 
 // It's 5!
-router.route("/its5").all(misc.its5Route);
+router.route("/its5").all(its5Route);
 
 // Echo (development only)
-router.route("/echo").all(misc.echoRoute);
+router.route("/echo").all(echoRoute);
 
 export default router;
