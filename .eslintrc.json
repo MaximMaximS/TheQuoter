@@ -44,6 +44,9 @@
     "no-use-before-define": "error",
     "no-unneeded-ternary": "error",
 
+    "node/no-unpublished-import": "off",
+    "sonarjs/no-duplicate-string": "off",
+
     "node/no-unsupported-features/es-syntax": [
       "error",
       { "ignores": ["modules"] }

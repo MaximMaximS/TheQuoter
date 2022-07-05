@@ -3,6 +3,8 @@ import { Types } from "mongoose";
 import { ServerError, ValidatorError } from "../src/modules/errors";
 import * as utils from "../src/modules/utils";
 
+jest.setTimeout(30_000);
+
 describe("utils", () => {
   // Mock environment variables
   const env = process.env;

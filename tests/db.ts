@@ -7,6 +7,8 @@ import User from "../src/modules/models/user";
 
 let mongod: MongoMemoryServer | undefined;
 
+jest.setTimeout(30_000);
+
 export async function init() {
   mongod = await MongoMemoryServer.create();
   mongoose.connect(mongod.getUri());

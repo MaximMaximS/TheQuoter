@@ -10,6 +10,8 @@ import {
   init,
 } from "./db";
 
+jest.setTimeout(30_000);
+
 beforeAll(async () => {
   await init();
 });
