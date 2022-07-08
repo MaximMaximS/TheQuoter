@@ -14,6 +14,8 @@
 
 ## In Progress
 
+- [ ] Remake permission system
+
 ## Done ✓
 
 - [x] Quote editing
