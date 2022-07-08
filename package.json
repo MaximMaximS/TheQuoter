@@ -14,7 +14,7 @@
     "format": "prettier --write . --ignore-unknown",
     "lint": "eslint --ext .ts ./src",
     "docker": "npm run build && docker build . -f Dockerfile -t maximmaxims/thequoter:develop",
-    "test": "jest"
+    "test": "jest --maxWorkers=1"
   },
   "repository": {
     "type": "git",
