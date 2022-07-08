@@ -21,8 +21,8 @@ export async function getQuoteRoute(req: Request, res: Response) {
   if (quoteFound === null) {
     throw new NotFoundError();
   }
-  const reducedQuote = await quoteFound.reduce();
-  res.json(reducedQuote);
+  const preparedQuote = await quoteFound.prepare();
+  res.json(preparedQuote);
 }
 
 export async function searchQuotesRoute(req: Request, res: Response) {
@@ -53,7 +53,7 @@ export async function searchQuotesRoute(req: Request, res: Response) {
   const quotes = await query.exec();
 
   // Simplify all quotes
-  const quotesFound = await Promise.all(quotes.map((q) => q.reduce()));
+  const quotesFound = await Promise.all(quotes.map((q) => q.prepare()));
 
   res.json(quotesFound); // Send the found enteries
 }
@@ -209,7 +209,7 @@ export async function randomQuoteRoute(_req: Request, res: Response) {
   if (quote === undefined) {
     throw new ServerError("Quote randomization failed");
   }
-  res.json(await quote.reduce());
+  res.json(await quote.prepare());
 }
 
 // Quote must be users own pending quote or user must be admin

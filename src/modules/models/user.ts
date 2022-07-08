@@ -15,7 +15,7 @@ interface IUser {
   updatedAt: Date;
 }
 
-export interface IReducedUser {
+export interface IPreparedUser {
   _id: Types.ObjectId;
   username: string;
   email: string;
@@ -24,7 +24,7 @@ export interface IReducedUser {
 }
 
 interface IUserMethods {
-  reduce(): IReducedUser;
+  prepare(): IPreparedUser;
   isValidPassword(password: string): boolean;
   genToken(): string;
   requirePermit(permit: "admin" | "moderator" | Types.ObjectId): void;
@@ -85,7 +85,7 @@ UserSchema.pre("save", function (next) {
 export type UserType = Document<Types.ObjectId, unknown, IUser> &
   IUser & { _id: Types.ObjectId } & IUserMethods;
 
-UserSchema.method<UserType>("reduce", function (): IReducedUser {
+UserSchema.method<UserType>("prepare", function (): IPreparedUser {
   return {
     _id: this._id,
     username: this.username,

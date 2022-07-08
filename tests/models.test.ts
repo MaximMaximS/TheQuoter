@@ -10,8 +10,6 @@ import {
   personId,
 } from "./db";
 
-jest.setTimeout(30_000);
-
 beforeAll(async () => {
   await init();
 });

@@ -10,14 +10,14 @@ interface IPerson {
   updatedAt: Date;
 }
 
-export interface IReducedPerson {
+export interface IPreparedPerson {
   _id: Types.ObjectId;
   name: string;
   type: string;
 }
 
 interface IPersonMethods {
-  reduce(): IReducedPerson;
+  prepare(): IPreparedPerson;
 }
 
 type PersonModel = Model<IPerson, unknown, IPersonMethods>;
@@ -45,7 +45,7 @@ const PersonSchema = new Schema<IPerson, PersonModel, IPersonMethods>(
   { timestamps: true }
 );
 
-PersonSchema.method("reduce", function (): IReducedPerson {
+PersonSchema.method("prepare", function (): IPreparedPerson {
   return {
     _id: this._id,
     name: this.name,

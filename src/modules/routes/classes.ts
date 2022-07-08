@@ -8,7 +8,7 @@ export async function getClassRoute(req: Request, res: Response) {
   if (classFound === null) {
     throw new NotFoundError();
   }
-  res.json(classFound.reduce());
+  res.json(classFound.prepare());
 }
 
 export async function searchClassesRoute(req: Request, res: Response) {
@@ -19,7 +19,7 @@ export async function searchClassesRoute(req: Request, res: Response) {
   }
   const classes = await query.exec();
   // Simplify all classes
-  const classesFound = classes.map((c) => c.reduce());
+  const classesFound = classes.map((c) => c.prepare());
 
   res.json(classesFound);
 }
