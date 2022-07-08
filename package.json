@@ -49,7 +49,7 @@
     "eslint-plugin-node": "^11.1.0",
     "eslint-plugin-only-error": "^1.0.2",
     "eslint-plugin-sonarjs": "^0.13.0",
-    "eslint-plugin-unicorn": "^43.0.0",
+    "eslint-plugin-unicorn": "^43.0.1",
     "husky": "^8.0.1",
     "jest": "^28.1.2",
     "lint-staged": "^13.0.3",
@@ -62,8 +62,12 @@
     "typescript": "^4.7.4"
   },
   "lint-staged": {
-    "*.ts": "npm run lint",
-    "**/*": "npm run format"
+    "*.ts": [
+      "eslint --fix"
+    ],
+    "**/*": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "bcrypt": "^5.0.1",
