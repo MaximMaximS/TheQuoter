@@ -1,8 +1,8 @@
 import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import { ServerError } from "../errors";
-import Class, { IReducedClass } from "./class";
-import Person, { IReducedPerson } from "./person";
+import Class, { IPreparedClass } from "./class";
+import Person, { IPreparedPerson } from "./person";
 
 interface IReaction {
   like: boolean;
@@ -84,18 +84,18 @@ interface IQuote {
   updatedAt: Date;
 }
 
-export interface IReducedQuote {
+export interface IPreparedQuote {
   _id: Types.ObjectId;
   context: string | undefined;
   text: string;
   note: string | undefined;
-  originator: IReducedPerson;
-  class: IReducedClass | undefined;
+  originator: IPreparedPerson;
+  class: IPreparedClass | undefined;
   state: State;
 }
 
 interface IQuoteMethodsAndOverrides {
-  reduce(): Promise<IReducedQuote>;
+  prepare(): Promise<IPreparedQuote>;
   resolveLikes(): number;
 
   reactions: Types.DocumentArray<IReaction>;
@@ -171,20 +171,20 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
 );
 
 QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
-  "reduce",
+  "prepare",
   async function () {
     const classDoc = await Class.findById(this.class).exec();
     const originatorDoc = await Person.findById(this.originator).exec();
     if (originatorDoc === null) {
       throw new ServerError(`Orginator for quote ${this._id} not found`);
     }
-    const doc: IReducedQuote = {
+    const doc: IPreparedQuote = {
       _id: this._id,
       context: this.context,
       text: this.text,
       note: this.note,
-      originator: originatorDoc.reduce(),
-      class: classDoc !== null ? classDoc.reduce() : undefined,
+      originator: originatorDoc.prepare(),
+      class: classDoc !== null ? classDoc.prepare() : undefined,
       state: this.state,
     };
     return doc;

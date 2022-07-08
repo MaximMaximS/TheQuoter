@@ -9,13 +9,13 @@ interface IClass {
   updatedAt: Date;
 }
 
-export interface IReducedClass {
+export interface IPreparedClass {
   _id: Types.ObjectId;
   name: string;
 }
 
 interface IClassMethods {
-  reduce(): IReducedClass;
+  prepare(): IPreparedClass;
 }
 
 type ClassModel = Model<IClass, unknown, IClassMethods>;
@@ -38,7 +38,7 @@ const ClassSchema = new Schema<IClass, ClassModel, IClassMethods>(
   { timestamps: true }
 );
 
-ClassSchema.method("reduce", function (): IReducedClass {
+ClassSchema.method("prepare", function (): IPreparedClass {
   return {
     _id: this._id,
     name: this.name,

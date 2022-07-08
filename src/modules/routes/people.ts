@@ -8,7 +8,7 @@ export async function getPersonRoute(req: Request, res: Response) {
   if (personFound === null) {
     throw new NotFoundError();
   }
-  res.json(personFound.reduce());
+  res.json(personFound.prepare());
 }
 
 export async function searchPeopleRoute(req: Request, res: Response) {
@@ -23,7 +23,7 @@ export async function searchPeopleRoute(req: Request, res: Response) {
     query = query.where("type").regex(type, "i");
   }
   const people = await query.exec();
-  res.json(people.map((p) => p.reduce()));
+  res.json(people.map((p) => p.prepare()));
 }
 
 export async function createPersonRoute(req: Request, res: Response) {

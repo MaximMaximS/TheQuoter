@@ -14,7 +14,7 @@ export async function registerUserRoute(req: Request, res: Response) {
   // Successfully created a new user
   res.status(201).json({
     token: user.genToken(),
-    user: user.reduce(),
+    user: user.prepare(),
   });
 }
 
@@ -38,7 +38,7 @@ export async function loginUserRoute(req: Request, res: Response) {
   );
   res.json({
     token: user.genToken(),
-    user: user.reduce(),
+    user: user.prepare(),
   });
 }
 
@@ -51,7 +51,7 @@ export async function getUserRoute(req: Request, res: Response) {
   if (!user._id.equals(cUser._id) && cUser.role !== "admin") {
     throw new ForbiddenError();
   }
-  res.json(user.reduce());
+  res.json(user.prepare());
 }
 
 // TODO
