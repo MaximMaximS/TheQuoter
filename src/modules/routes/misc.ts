@@ -9,12 +9,12 @@ export function echoRoute(req: Request, res: Response) {
   if (process.env["NODE_ENV"] !== "development") {
     throw new NotFoundError();
   }
-  const message =
-    typeof req.body.message === "string"
-      ? req.body.message
-      : typeof req.query["message"] === "string"
-      ? req.query["message"]
-      : "Hello World!";
+  let response = "Hello, world!";
+  if (typeof req.body.message === "string") {
+    response = req.body.message;
+  } else if (typeof req.query["message"] === "string") {
+    response = req.query["message"];
+  }
 
-  res.json({ message });
+  res.json({ response });
 }
