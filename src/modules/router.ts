@@ -5,7 +5,7 @@ import {
   getClassRoute,
   searchClassesRoute,
 } from "./routes/classes";
-import { echoRoute, its5Route } from "./routes/misc";
+import { echoRoute, its5Route, susRoute } from "./routes/misc";
 import {
   createPersonRoute,
   getPersonRoute,
@@ -108,5 +108,8 @@ router.route("/its5").all(its5Route);
 
 // Echo (development only)
 router.route("/echo").all(echoRoute);
+
+// Nothing
+router.route("/").all(susRoute);
 
 export default router;
