@@ -88,3 +88,11 @@ export function id(id: unknown, path: string): Types.ObjectId {
   }
   return new Types.ObjectId(soru);
 }
+
+export function escapeRegExp(query: string) {
+  const chars = /[$()*+.?[\\\]^{|}]/g;
+
+  return new RegExp(chars.source).test(query)
+    ? query.replace(chars, "\\$&")
+    : query;
+}
