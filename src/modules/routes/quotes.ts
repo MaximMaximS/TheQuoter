@@ -10,6 +10,7 @@ import {
 } from "../errors";
 import {
   enforcePermit,
+  escapeRegExp,
   id,
   idOrUndefined,
   string,
@@ -45,7 +46,7 @@ export async function searchQuotesRoute(req: Request, res: Response) {
   }
   const text = stringOrUndefined(req.query["text"], "text");
   if (text !== undefined) {
-    query = query.regex("text", new RegExp(text, "i"));
+    query = query.regex("text", new RegExp(escapeRegExp(text), "i"));
   }
   if (state !== undefined) {
     query = query.where("state").equals(state);

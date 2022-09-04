@@ -1,7 +1,12 @@
 import type { Request, Response } from "express";
 import Person from "../models/person";
 import { NotFoundError } from "../errors";
-import { enforcePermit, string, stringOrUndefined } from "../utils";
+import {
+  enforcePermit,
+  escapeRegExp,
+  string,
+  stringOrUndefined,
+} from "../utils";
 
 export async function getPersonRoute(req: Request, res: Response) {
   const personFound = await Person.findById(req.params["id"]).exec();
@@ -17,10 +22,10 @@ export async function searchPeopleRoute(req: Request, res: Response) {
 
   let query = Person.find();
   if (name !== undefined) {
-    query = query.regex("name", new RegExp(name, "i"));
+    query = query.regex("name", new RegExp(escapeRegExp(name), "i"));
   }
   if (type !== undefined) {
-    query = query.regex("type", new RegExp(type, "i"));
+    query = query.regex("type", new RegExp(escapeRegExp(type), "i"));
   }
   const people = await query.exec();
   res.json(people.map((p) => p.prepare()));

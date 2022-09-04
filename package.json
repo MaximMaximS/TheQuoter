@@ -1,6 +1,6 @@
 {
   "name": "thequoter",
-  "version": "0.1.8",
+  "version": "0.1.9",
   "description": "Backend for the Quoter project",
   "main": "./dist/server.js",
   "engines": {
