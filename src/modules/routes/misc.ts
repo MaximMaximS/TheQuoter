@@ -9,7 +9,7 @@ export function echoRoute(req: Request, res: Response) {
   if (process.env["NODE_ENV"] !== "development") {
     throw new NotFoundError();
   }
-  let response = "Hello, world!";
+  let response = "Hello, World!";
   if (typeof req.body.message === "string") {
     response = req.body.message;
   } else if (typeof req.query["message"] === "string") {
