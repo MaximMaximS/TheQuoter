@@ -4,7 +4,7 @@ import app from "./modules/app";
 
 let port = 3000;
 if (process.env["PORT"] !== undefined) {
-  port = Number.parseInt(process.env["PORT"]);
+  port = Number.parseInt(process.env["PORT"], 10);
   if (Number.isNaN(port)) {
     throw new SyntaxError("PORT is not a number");
   }

@@ -6,11 +6,7 @@ ENV NODE_ENV=production
 
 COPY ./package*.json ./
 
-RUN apk add --no-cache make gcc g++ python3 && \
-    npm ci --omit=dev --ignore-scripts && \
-    npm rebuild bcrypt --build-from-source && \
-    npm cache clean --force && \
-    apk del make gcc g++ python3
+RUN npm ci --omit=dev --ignore-scripts && npm cache clean --force
 
 COPY ./ ./
 
