@@ -17,10 +17,10 @@ export async function searchPeopleRoute(req: Request, res: Response) {
 
   let query = Person.find();
   if (name !== undefined) {
-    query = query.where("name").regex(name, "i");
+    query = query.regex("name", new RegExp(name, "i"));
   }
   if (type !== undefined) {
-    query = query.where("type").regex(type, "i");
+    query = query.regex("type", new RegExp(type, "i"));
   }
   const people = await query.exec();
   res.json(people.map((p) => p.prepare()));

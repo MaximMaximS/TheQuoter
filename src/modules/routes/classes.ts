@@ -15,7 +15,7 @@ export async function searchClassesRoute(req: Request, res: Response) {
   const name = stringOrUndefined(req.query["name"], "name");
   let query = Class.find();
   if (name !== undefined) {
-    query = query.where("name").regex(name, "i");
+    query = query.regex("name", new RegExp(name, "i"));
   }
   const classes = await query.exec();
   // Simplify all classes
