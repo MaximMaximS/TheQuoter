@@ -1,7 +1,12 @@
 import type { Request, Response } from "express";
 import Class from "../models/class";
 import { NotFoundError } from "../errors";
-import { enforcePermit, string, stringOrUndefined } from "../utils";
+import {
+  enforcePermit,
+  escapeRegExp,
+  string,
+  stringOrUndefined,
+} from "../utils";
 
 export async function getClassRoute(req: Request, res: Response) {
   const classFound = await Class.findById(req.params["id"]).exec();
@@ -15,7 +20,7 @@ export async function searchClassesRoute(req: Request, res: Response) {
   const name = stringOrUndefined(req.query["name"], "name");
   let query = Class.find();
   if (name !== undefined) {
-    query = query.regex("name", new RegExp(name, "i"));
+    query = query.regex("name", new RegExp(escapeRegExp(name), "i"));
   }
   const classes = await query.exec();
   // Simplify all classes
