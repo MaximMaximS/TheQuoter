@@ -20,7 +20,7 @@ export function echoRoute(req: Request, res: Response) {
 }
 
 export function susRoute(_req: Request, res: Response) {
-  // This line is deffinitely serious.
+  // This line is definitely serious.
   res
     .type("text/plain")
     .send(
