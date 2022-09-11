@@ -3,6 +3,7 @@ import idValidator from "mongoose-id-validator";
 import { ServerError } from "../errors";
 import Class, { IPreparedClass } from "./class";
 import Person, { IPreparedPerson } from "./person";
+import type { UserType } from "./user";
 
 interface IReaction {
   like: boolean;
@@ -69,16 +70,17 @@ CommentSchema.method<IComment>("resolveLikes", function () {
 });
 
 export type State = "pending" | "public" | "archived";
+export type Operation = "create" | "view" | "edit" | "state" | "delete";
 
 interface IQuote {
   state: State;
-  context?: string | undefined;
+  context: string | undefined;
   text: string;
-  note?: string | undefined;
+  note: string | undefined;
   originator: Types.ObjectId;
-  class?: Types.ObjectId | undefined;
+  class: Types.ObjectId | undefined;
   createdBy: Types.ObjectId;
-  approvedBy?: Types.ObjectId | undefined;
+  approvedBy: Types.ObjectId | undefined;
   reactions: IReaction[];
   createdAt: Date;
   updatedAt: Date;
@@ -97,6 +99,7 @@ export interface IPreparedQuote {
 interface IQuoteMethodsAndOverrides {
   prepare(): Promise<IPreparedQuote>;
   resolveLikes(): number;
+  can(user: UserType, opertation: Operation): boolean;
 
   reactions: Types.DocumentArray<IReaction>;
 }
@@ -194,6 +197,79 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
 QuoteSchema.method<IQuote>("resolveLikes", function () {
   return this.reactions.filter((el) => el.like).length;
 });
+
+// Cognitive Complexity ._.
+function canModerator(
+  user: UserType,
+  quote: QuoteType,
+  operation: "create" | "view" | "edit" | "delete"
+) {
+  switch (operation) {
+    case "create":
+      return (
+        (quote.state === "public" && quote.class === user.class) ||
+        (quote.state === "pending" && quote.class === undefined)
+      );
+
+    case "view":
+      return (
+        (quote.state === "public" &&
+          (quote.class === undefined || quote.class === user.class)) ||
+        (quote.state === "pending" &&
+          (quote.class === user.class || quote.originator === user._id))
+      );
+
+    default:
+      return (
+        quote.state === "pending" &&
+        (quote.class === user.class || quote.originator === user._id)
+      );
+  }
+}
+
+function canUser(
+  user: UserType,
+  quote: QuoteType,
+  operation: "create" | "view" | "edit" | "delete"
+) {
+  switch (operation) {
+    case "create":
+      return (
+        quote.state === "pending" &&
+        (quote.class === user.class || quote.class === undefined)
+      );
+    case "view":
+      return (
+        (quote.state === "public" &&
+          (quote.class === user.class || quote.class === undefined)) ||
+        (quote.state === "pending" && quote.originator === user._id)
+      );
+
+    default:
+      return quote.state === "pending" && quote.originator === user._id;
+  }
+}
+
+// Permissions resolver
+QuoteSchema.method<QuoteType>(
+  "can",
+  function (user: UserType, operation: Operation) {
+    if (user.role === "admin") {
+      return true;
+    }
+    if (operation === "state") {
+      return (
+        user.role === "moderator" &&
+        this.state === "pending" &&
+        this.class === user.class
+      );
+    }
+    if (user.role === "moderator") {
+      return canModerator(user, this, operation);
+    }
+    return canUser(user, this, operation);
+  }
+);
 
 QuoteSchema.plugin(idValidator);
 

@@ -76,13 +76,6 @@ export async function createPeople() {
     type: "teacher",
     createdBy: admin._id,
   });
-  /*
-  await Person.create({
-    name: "student",
-    type: "student",
-    createdBy: admin._id,
-  });
-  */
 }
 
 export async function createQuotes() {
