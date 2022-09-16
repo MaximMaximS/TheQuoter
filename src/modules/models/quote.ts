@@ -69,7 +69,7 @@ CommentSchema.method<IComment>("resolveLikes", function () {
   return this.reactions.filter((el) => el.like).length;
 });
 
-export type State = "pending" | "public" | "archived";
+export type State = "pending" | "public";
 export type Operation = "create" | "view" | "edit" | "state" | "delete";
 
 interface IQuote {
@@ -113,7 +113,7 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
   {
     state: {
       type: String,
-      enum: ["pending", "public", "archived"],
+      enum: ["pending", "public"],
       default: "pending",
     },
     context: {

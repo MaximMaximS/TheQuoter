@@ -29,7 +29,7 @@ export async function getQuoteRoute(req: Request, res: Response) {
 export async function searchQuotesRoute(req: Request, res: Response) {
   // Public is fine, but if it's not, we need to check if the user is an admin
   const state = req.query["state"];
-  if (state === "pending" || state === "archived") {
+  if (state === "pending") {
     await enforcePermit(req.headers.authorization, "admin");
   } else if (state !== undefined && state !== "public") {
     throw new ValidatorError("state", "state");
@@ -161,7 +161,7 @@ export async function editQuoteRoute(req: Request, res: Response) {
 
 export async function setQuoteStateRoute(req: Request, res: Response) {
   const state = string(req.body.state, "state");
-  if (state !== "public" && state !== "pending" && state !== "archived") {
+  if (state !== "public" && state !== "pending") {
     throw new ValidatorError("state", "state");
   }
 
@@ -177,27 +177,18 @@ export async function setQuoteStateRoute(req: Request, res: Response) {
     user.requirePermit("admin");
   }
 
-  switch (state) {
-    case "public":
-      if (current.state === "pending") {
-        current.state = "public";
-        current.approvedBy = user._id;
-        await current.save();
-      } else {
-        throw new ConflictError("state");
-      }
-      break;
-    case "archived":
-      if (current.state !== "archived") {
-        current.state = "archived";
-        await current.save();
-      } else {
-        throw new ConflictError("state");
-      }
-      break;
-    default:
+  if (state === "public") {
+    if (current.state === "pending") {
+      current.state = "public";
+      current.approvedBy = user._id;
+      await current.save();
+    } else {
       throw new ConflictError("state");
+    }
+  } else {
+    throw new ConflictError("state");
   }
+
   res.sendStatus(204);
 }
 
