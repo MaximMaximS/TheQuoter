@@ -31,13 +31,14 @@ export class ValidatorError extends Error {
 }
 
 export class ServerError extends Error {
-  full?: Error;
+  full: Error;
   constructor(error: Error | string) {
     if (error instanceof Error) {
       super(error.message);
       this.full = error;
     } else {
       super(error);
+      this.full = new Error(error);
     }
     this.name = "ServerError";
   }

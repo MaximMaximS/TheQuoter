@@ -4,7 +4,7 @@ import User from "./models/user";
 import { IncorrectLoginError, ServerError, ValidatorError } from "./errors";
 
 // Get user from authorization header
-export async function getUser(authHeader?: string) {
+export async function getUser(authHeader: string) {
   if (authHeader !== undefined) {
     // Slice off Bearer prefix
     const token = authHeader.split(" ")[1] || "";
@@ -32,7 +32,7 @@ export async function enforcePermit(
   permit: "user" | "moderator" | "admin" | Types.ObjectId
 ) {
   // Verify token
-  const user = await getUser(authHeader);
+  const user = authHeader !== undefined ? await getUser(authHeader) : undefined;
   // If admin false then enforce moderator or admin, otherwise enforce admin
   if (user === undefined) {
     throw new IncorrectLoginError();

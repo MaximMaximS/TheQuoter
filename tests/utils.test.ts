@@ -1,6 +1,10 @@
 import { JsonWebTokenError } from "jsonwebtoken";
 import { Types } from "mongoose";
-import { ServerError, ValidatorError } from "../src/modules/errors";
+import {
+  IncorrectLoginError,
+  ServerError,
+  ValidatorError,
+} from "../src/modules/errors";
 import * as utils from "../src/modules/utils";
 
 describe("utils", () => {
@@ -18,7 +22,7 @@ describe("utils", () => {
 
   test("function getUser", async () => {
     // User is undefined if no auth header
-    await expect(utils.getUser()).resolves.toBeUndefined();
+    // await expect(utils.getUser()).resolves.toBeUndefined();
 
     // Throw error if JWT_SECRET is not defined
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(ServerError);
@@ -27,6 +31,13 @@ describe("utils", () => {
     process.env["JWT_SECRET"] = "secret";
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(
       JsonWebTokenError
+    );
+  });
+
+  test("function enforcePermit", async () => {
+    // Throw error if no auth header
+    await expect(utils.enforcePermit(undefined, "user")).rejects.toThrow(
+      IncorrectLoginError
     );
   });
 
