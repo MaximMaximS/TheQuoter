@@ -4,14 +4,17 @@ import {
   classId,
   clearDatabase,
   closeDatabase,
-  createClasses,
-  createPeople,
-  createUsers,
+  fillDatabase,
+  getToken,
   init,
 } from "./db";
 
 beforeAll(async () => {
   await init();
+});
+
+beforeEach(async () => {
+  await fillDatabase();
 });
 
 afterEach(async () => {
@@ -24,7 +27,6 @@ afterAll(async () => {
 
 describe("people", () => {
   test("GET /people", async () => {
-    await createPeople();
     // Expect empty array json
 
     let res = await request(app)
@@ -47,7 +49,6 @@ describe("people", () => {
 
 describe("classes", () => {
   test("GET /classes", async () => {
-    await createClasses();
     const res = await request(app)
       .get("/classes")
       .expect("Content-Type", /json/)
@@ -58,7 +59,6 @@ describe("classes", () => {
 
 describe("users", () => {
   test("Register", async () => {
-    await createClasses();
     process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
       .post("/register")
@@ -79,7 +79,6 @@ describe("users", () => {
   });
 
   test("Login", async () => {
-    await createUsers();
     process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
       .post("/login")
@@ -94,5 +93,19 @@ describe("users", () => {
     expect(res.body.user.username).toBe("admin");
     expect(res.body.user.email).toBe("a.b@c.dd");
     expect(res.body.user.role).toBe("admin");
+  });
+});
+
+describe("quotes", () => {
+  test("GET /quotes", async () => {
+    await request(app).get("/quotes").expect(401);
+    const user = await getToken("user");
+    const res = await request(app)
+      .get("/quotes")
+      .set("Authorization", `Bearer ${user}`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+    // Expect array of quotes
+    expect(res.body).toHaveLength(1);
   });
 });

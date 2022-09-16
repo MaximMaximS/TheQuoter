@@ -28,29 +28,38 @@ export async function clearDatabase() {
   }
 }
 
-export async function createUsers() {
-  await User.create({
+export async function getToken(who: "admin" | "user") {
+  process.env["JWT_SECRET"] = "secret";
+  const user = await User.findOne({ username: who }).exec();
+  if (user === null) {
+    throw new Error("User not found");
+  }
+  return user.genToken();
+}
+
+export const classId = new mongoose.Types.ObjectId();
+
+export const personId = new mongoose.Types.ObjectId();
+
+export async function fillDatabase() {
+  const admin = await User.create({
     username: "admin",
     email: "a.b@c.dd",
     password: "adminadmin",
     role: "admin",
   });
-  await User.create({
+  const user = await User.create({
     username: "user",
     email: "e.f@g.hh",
     password: "useruser",
     role: "user",
   });
-}
-
-export const classId = new mongoose.Types.ObjectId();
-
-export async function createClasses() {
-  await createUsers();
-  const admin = await User.findOne({ username: "admin" }).exec();
-  if (admin === null) {
-    throw new Error("admin is null");
-  }
+  const teacher = await Person.create({
+    _id: personId,
+    name: "teacher",
+    type: "teacher",
+    createdBy: admin._id,
+  });
   await Class.create({
     _id: classId,
     name: "Class 1",
@@ -60,38 +69,17 @@ export async function createClasses() {
     name: "Class 2",
     createdBy: admin._id,
   });
-}
-
-export const personId = new mongoose.Types.ObjectId();
-
-export async function createPeople() {
-  await createUsers();
-  const admin = await User.findOne({ username: "admin" }).exec();
-  if (admin === null) {
-    throw new Error("admin is null");
-  }
-  await Person.create({
-    _id: personId,
-    name: "teacher",
-    type: "teacher",
-    createdBy: admin._id,
-  });
-}
-
-export async function createQuotes() {
-  await createUsers();
-  const admin = await User.findOne({ username: "admin" }).exec();
-  if (admin === null) {
-    throw new Error("admin is null");
-  }
-  const teacher = await Person.findOne({ name: "teacher" }).exec();
-  if (teacher === null) {
-    throw new Error("teacher is null");
-  }
-
   await Quote.create({
     text: "Quote 1",
+    state: "public",
     originator: teacher._id,
     createdBy: admin._id,
+    approvedBy: admin._id,
+  });
+
+  await Quote.create({
+    text: "Quote 2",
+    originator: teacher._id,
+    createdBy: user._id,
   });
 }

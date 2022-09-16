@@ -1,7 +1,7 @@
 import type { Request, Response } from "express";
 import User from "../models/user";
-import { ForbiddenError, IncorrectLoginError, NotFoundError } from "../errors";
-import { enforcePermit, id, string } from "../utils";
+import { IncorrectLoginError, NotFoundError } from "../errors";
+import { enforceUser, id, string } from "../utils";
 
 export async function registerUserRoute(req: Request, res: Response) {
   // Try to create a new user
@@ -43,26 +43,13 @@ export async function loginUserRoute(req: Request, res: Response) {
 }
 
 export async function getUserRoute(req: Request, res: Response) {
-  const cUser = await enforcePermit(req.headers.authorization, "user");
+  const cUser = await enforceUser(req.headers.authorization);
   const user = await User.findById(req.params["id"]).exec();
   if (user === null) {
     throw new NotFoundError();
   }
   if (!user._id.equals(cUser._id) && cUser.role !== "admin") {
-    throw new ForbiddenError();
-  }
-  res.json(user.prepare());
-}
-
-// TODO
-export async function deleteUserRoute(req: Request, res: Response) {
-  if (process.env["NODE_ENV"] !== "development") {
     throw new NotFoundError();
   }
-  const user = await login(
-    string(req.body.username, "username"),
-    string(req.body.password, "password")
-  );
-  user.remove();
-  res.sendStatus(204);
+  res.json(user.prepare());
 }

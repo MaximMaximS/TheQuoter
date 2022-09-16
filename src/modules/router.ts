@@ -21,7 +21,6 @@ import {
   searchQuotesRoute,
 } from "./routes/quotes";
 import {
-  deleteUserRoute,
   getUserRoute,
   loginUserRoute,
   registerUserRoute,
@@ -35,12 +34,6 @@ router
   .route("/register")
   // Register a new user
   .post(asyncMiddleware(registerUserRoute))
-  .all(methodNotAllowed);
-
-router
-  .route("/users")
-  // Delete OWN user (development only)
-  .delete(asyncMiddleware(deleteUserRoute))
   .all(methodNotAllowed);
 
 router.route("/users/:id").get(asyncMiddleware(getUserRoute));

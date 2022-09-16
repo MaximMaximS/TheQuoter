@@ -4,13 +4,17 @@ import User from "../src/modules/models/user";
 import {
   clearDatabase,
   closeDatabase,
-  createPeople,
+  fillDatabase,
   init,
   personId,
 } from "./db";
 
 beforeAll(async () => {
   await init();
+});
+
+beforeEach(async () => {
+  await fillDatabase();
 });
 
 afterEach(async () => {
@@ -23,7 +27,6 @@ afterAll(async () => {
 
 describe("person", () => {
   test("Same name", async () => {
-    await createPeople();
     const admin = await User.findOne({ username: "admin" }).exec();
     if (admin === null) {
       throw new Error("Admin not found");
@@ -37,7 +40,6 @@ describe("person", () => {
     ).rejects.toThrow(Error.ValidationError);
   });
   test("Same id", async () => {
-    await createPeople();
     const admin = await User.findOne({ username: "admin" }).exec();
     if (admin === null) {
       throw new Error("Admin not found");

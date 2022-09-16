@@ -69,8 +69,8 @@ CommentSchema.method<IComment>("resolveLikes", function () {
   return this.reactions.filter((el) => el.like).length;
 });
 
-export type State = "pending" | "public";
-export type Operation = "create" | "view" | "edit" | "publish" | "delete";
+type State = "pending" | "public";
+type Operation = "create" | "view" | "edit" | "publish" | "delete";
 
 interface IQuote {
   state: State;

@@ -1,10 +1,6 @@
 import { JsonWebTokenError } from "jsonwebtoken";
 import { Types } from "mongoose";
-import {
-  IncorrectLoginError,
-  ServerError,
-  ValidatorError,
-} from "../src/modules/errors";
+import { ServerError, ValidatorError } from "../src/modules/errors";
 import * as utils from "../src/modules/utils";
 
 describe("utils", () => {
@@ -31,13 +27,6 @@ describe("utils", () => {
     process.env["JWT_SECRET"] = "secret";
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(
       JsonWebTokenError
-    );
-  });
-
-  test("function enforcePermit", async () => {
-    // Throw error if no auth header
-    await expect(utils.enforcePermit(undefined, "user")).rejects.toThrow(
-      IncorrectLoginError
     );
   });
 

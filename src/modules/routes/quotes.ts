@@ -2,7 +2,7 @@ import type { Request, Response } from "express";
 import Quote from "../models/quote";
 import { ForbiddenError, NotFoundError, ServerError } from "../errors";
 import {
-  enforcePermit,
+  enforceUser,
   escapeRegExp,
   id,
   idOrUndefined,
@@ -11,7 +11,7 @@ import {
 } from "../utils";
 
 export async function getQuoteRoute(req: Request, res: Response) {
-  const user = await enforcePermit(req.headers.authorization, "user");
+  const user = await enforceUser(req.headers.authorization);
   const quoteFound = await Quote.findById(req.params["id"]).exec();
   if (quoteFound === null) {
     throw new NotFoundError();
@@ -45,7 +45,7 @@ export async function searchQuotesRoute(req: Request, res: Response) {
   const quotes = await query.exec();
 
   // Permission check
-  const user = await enforcePermit(req.headers.authorization, "user");
+  const user = await enforceUser(req.headers.authorization);
 
   // Simplify all quotes
   const quotesFound = await Promise.all(
@@ -56,7 +56,7 @@ export async function searchQuotesRoute(req: Request, res: Response) {
 }
 
 export async function createQuoteRoute(req: Request, res: Response) {
-  const user = await enforcePermit(req.headers.authorization, "user");
+  const user = await enforceUser(req.headers.authorization);
 
   const quote = new Quote({
     context: stringOrUndefined(req.body.context, "context"),
@@ -82,7 +82,7 @@ export async function createQuoteRoute(req: Request, res: Response) {
 }
 
 export async function editQuoteRoute(req: Request, res: Response) {
-  const user = await enforcePermit(req.headers.authorization, "user");
+  const user = await enforceUser(req.headers.authorization);
   const current = await Quote.findById(req.params["id"]).exec();
   if (current === null) {
     throw new NotFoundError();
@@ -137,7 +137,7 @@ export async function editQuoteRoute(req: Request, res: Response) {
 }
 
 export async function publishRoute(req: Request, res: Response) {
-  const user = await enforcePermit(req.headers.authorization, "user");
+  const user = await enforceUser(req.headers.authorization);
   const current = await Quote.findById(req.params["id"]).exec();
   if (current === null) {
     throw new NotFoundError();
@@ -170,7 +170,7 @@ export async function randomQuoteRoute(_req: Request, res: Response) {
 }
 
 export async function deleteQuoteRoute(req: Request, res: Response) {
-  const user = await enforcePermit(req.headers.authorization, "user");
+  const user = await enforceUser(req.headers.authorization);
   const quote = await Quote.findById(req.params["id"]).exec();
 
   if (quote === null) {
