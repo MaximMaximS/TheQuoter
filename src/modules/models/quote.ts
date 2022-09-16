@@ -70,7 +70,7 @@ CommentSchema.method<IComment>("resolveLikes", function () {
 });
 
 export type State = "pending" | "public";
-export type Operation = "create" | "view" | "edit" | "state" | "delete";
+export type Operation = "create" | "view" | "edit" | "publish" | "delete";
 
 interface IQuote {
   state: State;
@@ -257,7 +257,7 @@ QuoteSchema.method<QuoteType>(
     if (user.role === "admin") {
       return true;
     }
-    if (operation === "state") {
+    if (operation === "publish") {
       return (
         user.role === "moderator" &&
         this.state === "pending" &&

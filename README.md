@@ -18,12 +18,12 @@ TheQuoter (also known as "Hláškomat") ~~is~~ _will be_ server application for 
 
 ### Quotes
 
-| Role        | Create  | View             | Edit    | Change state | Delete  |
-| ----------- | ------- | ---------------- | ------- | ------------ | ------- |
-| Admin       | A       | A                | A       | A            | A       |
-| Moderator   | PS, WN  | P(S, N), W(S, O) | W(S, O) | WS           | W(S, O) |
-| User        | W(S, N) | P(S, N), WO      | WO      | X            | WO      |
-| Guest (TBA) | X       | PN               | X       | X            | X       |
+| Role        | Create  | View             | Edit    | Publish | Delete  |
+| ----------- | ------- | ---------------- | ------- | ------- | ------- |
+| Admin       | A       | A                | A       | A       | A       |
+| Moderator   | PS, WN  | P(S, N), W(S, O) | W(S, O) | WS      | W(S, O) |
+| User        | W(S, N) | P(S, N), WO      | WO      | X       | WO      |
+| Guest (TBA) | X       | PN               | X       | X       | X       |
 
 ### Classes
 

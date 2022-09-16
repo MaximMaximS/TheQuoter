@@ -1,13 +1,6 @@
 import type { Request, Response } from "express";
-import Quote, { QuoteType } from "../models/quote";
-import type { UserType } from "../models/user";
-import {
-  ConflictError,
-  ForbiddenError,
-  NotFoundError,
-  ServerError,
-  ValidatorError,
-} from "../errors";
+import Quote from "../models/quote";
+import { ForbiddenError, NotFoundError, ServerError } from "../errors";
 import {
   enforcePermit,
   escapeRegExp,
@@ -18,8 +11,13 @@ import {
 } from "../utils";
 
 export async function getQuoteRoute(req: Request, res: Response) {
+  const user = await enforcePermit(req.headers.authorization, "user");
   const quoteFound = await Quote.findById(req.params["id"]).exec();
   if (quoteFound === null) {
+    throw new NotFoundError();
+  }
+  // Permission check
+  if (!quoteFound.can(user, "view")) {
     throw new NotFoundError();
   }
   const preparedQuote = await quoteFound.prepare();
@@ -27,14 +25,6 @@ export async function getQuoteRoute(req: Request, res: Response) {
 }
 
 export async function searchQuotesRoute(req: Request, res: Response) {
-  // Public is fine, but if it's not, we need to check if the user is an admin
-  const state = req.query["state"];
-  if (state === "pending") {
-    await enforcePermit(req.headers.authorization, "admin");
-  } else if (state !== undefined && state !== "public") {
-    throw new ValidatorError("state", "state");
-  }
-
   let query = Quote.find();
   const originator = idOrUndefined(req.query["originator"], "originator");
   if (originator !== undefined) {
@@ -48,65 +38,47 @@ export async function searchQuotesRoute(req: Request, res: Response) {
   if (text !== undefined) {
     query = query.regex("text", new RegExp(escapeRegExp(text), "i"));
   }
+  const state = stringOrUndefined(req.query["state"], "state");
   if (state !== undefined) {
     query = query.where("state").equals(state);
   }
   const quotes = await query.exec();
 
+  // Permission check
+  const user = await enforcePermit(req.headers.authorization, "user");
+
   // Simplify all quotes
-  const quotesFound = await Promise.all(quotes.map((q) => q.prepare()));
+  const quotesFound = await Promise.all(
+    quotes.filter((quote) => quote.can(user, "view")).map((q) => q.prepare())
+  );
 
   res.json(quotesFound); // Send the found enteries
 }
 
 export async function createQuoteRoute(req: Request, res: Response) {
   const user = await enforcePermit(req.headers.authorization, "user");
-  const classId = idOrUndefined(req.body.class, "class");
 
-  let state: "public" | "pending" = "pending";
-  /*
-  ADMIN: public
-  MODERATOR: is from same class ? public : 403
-  USER: is from same class ? pending : 403
-  */
-  if (user.role === "admin") {
-    state = "public";
-  } else {
-    if (classId !== undefined) {
-      if (!user.class.equals(classId)) {
-        throw new ForbiddenError();
-      }
-      if (user.role === "moderator") {
-        state = "public";
-      }
-    }
-  }
-
-  const { _id } = await Quote.create({
+  const quote = new Quote({
     context: stringOrUndefined(req.body.context, "context"),
     text: string(req.body.text, "text"),
     note: stringOrUndefined(req.body.note, "note"),
     originator: id(req.body.originator, "originator"),
-    classId,
-    state,
+    classId: idOrUndefined(req.body.class, "class"),
+    state: "pending",
     createdBy: user,
-    approvedBy: state === "public" ? user : undefined,
   });
-  res.status(user.role === "admin" ? 201 : 202).json({ _id });
-}
 
-function editPerm(current: QuoteType, user: UserType) {
-  if (current.state === "pending") {
-    if (user.role === "user") {
-      if (!current.createdBy.equals(user._id)) {
-        throw new ForbiddenError();
-      }
-    } else {
-      user.requirePermit(current.class || "admin");
-    }
-  } else {
-    user.requirePermit("admin");
+  if (!quote.can(user, "create")) {
+    throw new ForbiddenError();
   }
+
+  if (quote.can(user, "publish")) {
+    quote.state = "public";
+  }
+
+  const { _id } = await quote.save();
+
+  res.status(user.role === "admin" ? 201 : 202).json({ _id });
 }
 
 export async function editQuoteRoute(req: Request, res: Response) {
@@ -116,8 +88,13 @@ export async function editQuoteRoute(req: Request, res: Response) {
     throw new NotFoundError();
   }
 
-  editPerm(current, user);
-  // Edit the quotes
+  if (!current.can(user, "view")) {
+    throw new NotFoundError();
+  }
+
+  if (!current.can(user, "edit")) {
+    throw new ForbiddenError();
+  }
 
   const text = stringOrUndefined(req.body.text, "text");
   // Text - change or nothing - don't change
@@ -159,35 +136,23 @@ export async function editQuoteRoute(req: Request, res: Response) {
   res.sendStatus(204);
 }
 
-export async function setQuoteStateRoute(req: Request, res: Response) {
-  const state = string(req.body.state, "state");
-  if (state !== "public" && state !== "pending") {
-    throw new ValidatorError("state", "state");
-  }
-
+export async function publishRoute(req: Request, res: Response) {
   const user = await enforcePermit(req.headers.authorization, "user");
   const current = await Quote.findById(req.params["id"]).exec();
   if (current === null) {
     throw new NotFoundError();
   }
 
-  if (current.state === "pending") {
-    user.requirePermit(current.class || "admin");
-  } else {
-    user.requirePermit("admin");
+  if (!current.can(user, "view")) {
+    throw new NotFoundError();
   }
 
-  if (state === "public") {
-    if (current.state === "pending") {
-      current.state = "public";
-      current.approvedBy = user._id;
-      await current.save();
-    } else {
-      throw new ConflictError("state");
-    }
-  } else {
-    throw new ConflictError("state");
+  if (!current.can(user, "publish")) {
+    throw new ForbiddenError();
   }
+
+  current.state = "public";
+  await current.save();
 
   res.sendStatus(204);
 }
@@ -204,19 +169,22 @@ export async function randomQuoteRoute(_req: Request, res: Response) {
   res.json(await quote.prepare());
 }
 
-// Quote must be users own pending quote or user must be admin
 export async function deleteQuoteRoute(req: Request, res: Response) {
   const user = await enforcePermit(req.headers.authorization, "user");
   const quote = await Quote.findById(req.params["id"]).exec();
+
   if (quote === null) {
     throw new NotFoundError();
   }
-  if (
-    user.role !== "admin" &&
-    (quote.state !== "pending" || !quote.createdBy.equals(user._id))
-  ) {
+
+  if (!quote.can(user, "view")) {
+    throw new NotFoundError();
+  }
+
+  if (!quote.can(user, "delete")) {
     throw new ForbiddenError();
   }
+
   await quote.remove();
   res.sendStatus(204);
 }

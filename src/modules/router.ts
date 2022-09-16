@@ -16,9 +16,9 @@ import {
   deleteQuoteRoute,
   editQuoteRoute,
   getQuoteRoute,
+  publishRoute,
   randomQuoteRoute,
   searchQuotesRoute,
-  setQuoteStateRoute,
 } from "./routes/quotes";
 import {
   deleteUserRoute,
@@ -30,10 +30,15 @@ import { methodNotAllowed } from "./middleware";
 
 const router = Router();
 
+// /register
+router
+  .route("/register")
+  // Register a new user
+  .post(asyncMiddleware(registerUserRoute))
+  .all(methodNotAllowed);
+
 router
   .route("/users")
-  // Register
-  .post(asyncMiddleware(registerUserRoute))
   // Delete OWN user (development only)
   .delete(asyncMiddleware(deleteUserRoute))
   .all(methodNotAllowed);
@@ -41,7 +46,7 @@ router
 router.route("/users/:id").get(asyncMiddleware(getUserRoute));
 
 router
-  .route("/users/login")
+  .route("/login")
   // Login
   .post(asyncMiddleware(loginUserRoute))
   .all(methodNotAllowed);
@@ -99,8 +104,8 @@ router
   .all(methodNotAllowed);
 
 router
-  .route("/quotes/:id/state")
-  .post(asyncMiddleware(setQuoteStateRoute))
+  .route("/quotes/:id/publish")
+  .post(asyncMiddleware(publishRoute))
   .all(methodNotAllowed);
 
 // It's 5!

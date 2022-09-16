@@ -61,7 +61,7 @@ describe("users", () => {
     await createClasses();
     process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
-      .post("/users")
+      .post("/register")
       .send({
         email: "example@example.com",
         username: "pablo",
@@ -82,7 +82,7 @@ describe("users", () => {
     await createUsers();
     process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
-      .post("/users/login")
+      .post("/login")
       .send({
         username: "admin",
         password: "adminadmin",
