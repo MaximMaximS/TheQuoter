@@ -72,13 +72,15 @@ export async function createQuoteRoute(req: Request, res: Response) {
     throw new ForbiddenError();
   }
 
-  if (quote.can(user, "publish")) {
+  const publish = quote.can(user, "publish");
+
+  if (publish) {
     quote.state = "public";
   }
 
-  const { _id } = await quote.save();
+  const saved = await quote.save();
 
-  res.status(user.role === "admin" ? 201 : 202).json({ _id });
+  res.status(publish ? 201 : 202).json(saved.prepare());
 }
 
 export async function editQuoteRoute(req: Request, res: Response) {
@@ -131,9 +133,9 @@ export async function editQuoteRoute(req: Request, res: Response) {
     }
   }
 
-  await current.save();
+  const saved = await current.save();
 
-  res.sendStatus(204);
+  res.json(await saved.prepare());
 }
 
 export async function publishRoute(req: Request, res: Response) {
@@ -152,9 +154,9 @@ export async function publishRoute(req: Request, res: Response) {
   }
 
   current.state = "public";
-  await current.save();
+  const saved = await current.save();
 
-  res.sendStatus(204);
+  res.json(await saved.prepare());
 }
 
 export async function randomQuoteRoute(_req: Request, res: Response) {

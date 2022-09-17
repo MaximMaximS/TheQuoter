@@ -3,13 +3,13 @@ import jwt from "jsonwebtoken";
 import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
-import { ForbiddenError, ServerError, ValidatorError } from "../errors";
+import { ServerError, ValidatorError } from "../errors";
 
 interface IUser {
   username: string;
   password: string;
   email: string;
-  role: "admin" | "moderator" | "user";
+  role: "admin" | "moderator" | "user" | "guest";
   class: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
@@ -19,7 +19,7 @@ export interface IPreparedUser {
   _id: Types.ObjectId;
   username: string;
   email: string;
-  role: "admin" | "moderator" | "user";
+  role: "admin" | "moderator" | "user" | "guest";
   class: Types.ObjectId;
 }
 
@@ -27,7 +27,6 @@ interface IUserMethods {
   prepare(): IPreparedUser;
   isValidPassword(password: string): boolean;
   genToken(): string;
-  requirePermit(permit: "admin" | "moderator" | Types.ObjectId): void;
 }
 
 export type UserModel = Model<IUser, unknown, IUserMethods>;
@@ -59,8 +58,8 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     role: {
       type: String,
       required: true,
-      enum: ["admin", "moderator", "user"],
-      default: "user",
+      enum: ["admin", "moderator", "user", "guest"],
+      default: "guest",
     },
     class: {
       type: Schema.Types.ObjectId,
@@ -114,26 +113,5 @@ UserSchema.method<UserType>("genToken", function () {
     }
   );
 });
-
-UserSchema.method<UserType>(
-  "requirePermit",
-  function (permit: "admin" | "moderator" | Types.ObjectId) {
-    if (this.role === "user") {
-      throw new ForbiddenError();
-    }
-    // If user is admin, return
-    if (this.role === "admin") {
-      return;
-    }
-    // If admin is required, throw error
-    if (permit === "admin") {
-      throw new ForbiddenError();
-    }
-    // If user is user, check if permit is user
-    if (typeof permit !== "string" && !permit.equals(this.class)) {
-      throw new ForbiddenError();
-    }
-  }
-);
 
 export default model<IUser, UserModel>("User", UserSchema, "users");

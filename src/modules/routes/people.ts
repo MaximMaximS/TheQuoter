@@ -31,10 +31,10 @@ export async function createPersonRoute(req: Request, res: Response) {
   if (user.role !== "admin") {
     throw new ForbiddenError();
   }
-  const { _id } = await Person.create({
+  const person = await Person.create({
     name: string(req.body.name, "name"),
     type: string(req.body.type, "type"),
     createdBy: user._id,
   });
-  res.status(201).json({ _id });
+  res.status(201).json(person.prepare());
 }

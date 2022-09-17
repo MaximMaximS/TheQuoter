@@ -257,6 +257,9 @@ QuoteSchema.method<QuoteType>(
     if (user.role === "admin") {
       return true;
     }
+    if (user.role === "guest") {
+      return this.state === "public" && this.class === undefined;
+    }
     if (operation === "publish") {
       return (
         user.role === "moderator" &&

@@ -74,7 +74,7 @@ describe("users", () => {
 
     expect(res.body.user.username).toBe("pablo");
     expect(res.body.user.email).toBe("example@example.com");
-    expect(res.body.user.role).toBe("user");
+    expect(res.body.user.role).toBe("guest");
     expect(res.body.user.class.toString()).toBe(classId.toString());
   });
 
