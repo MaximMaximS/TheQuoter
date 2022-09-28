@@ -14,6 +14,8 @@ export function genValidatorMessage(path: string, kind: string) {
       return `${path} is not a valid ObjectId`;
     case "state":
       return `${path} can be only "pending" or "public"`;
+    case "boolean":
+      return `${path} must be a boolean`;
     default:
       return `${path} is not valid (${kind})`;
   }

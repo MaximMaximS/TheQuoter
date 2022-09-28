@@ -6,7 +6,7 @@ import { IncorrectLoginError, ServerError, ValidatorError } from "./errors";
 // Get user from authorization header
 export async function getUser(authHeader: string) {
   // Slice off Bearer prefix
-  const token = authHeader.split(" ")[1] || "";
+  const token = authHeader.split(" ")[1] ?? "";
   if (process.env["JWT_SECRET"] === undefined) {
     throw new ServerError("JWT_SECRET is not defined");
   }

@@ -1,7 +1,12 @@
 import type { Request, Response } from "express";
 import Class from "../models/class";
 import User from "../models/user";
-import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
+import {
+  ConflictError,
+  ForbiddenError,
+  NotFoundError,
+  ValidatorError,
+} from "../errors";
 import { enforceUser, escapeRegExp, string, stringOrUndefined } from "../utils";
 
 export async function getClassRoute(req: Request, res: Response) {
@@ -38,7 +43,7 @@ export async function createClassRoute(req: Request, res: Response) {
   res.status(201).json(clas.prepare());
 }
 
-// List all users with role "guest", admins can see all users, moderators can see all guests guest.class == moderator.class
+// List all users with role "new", admins can see all users, moderators can see all new users that have new.class == moderator.class
 export async function listClassGuests(req: Request, res: Response) {
   const user = await enforceUser(req.headers.authorization);
   if (user.role !== "admin" && user.role !== "moderator") {
@@ -46,38 +51,45 @@ export async function listClassGuests(req: Request, res: Response) {
   }
   if (user.role === "moderator") {
     const users = await User.find({
-      role: "guest",
+      role: "new",
       class: user.class,
     }).exec();
     res.json(users.map((u) => u.prepare()));
   } else {
     const users = await User.find({
-      role: "guest",
+      role: "new",
     }).exec();
     res.json(users.map((u) => u.prepare()));
   }
 }
 
-// Post allow or decline a guest to join a class become a user
+// Post allow or decline a new user to join a class become a user
 export async function processGuest(req: Request, res: Response) {
   const user = await enforceUser(req.headers.authorization);
   if (user.role !== "admin" && user.role !== "moderator") {
     throw new ForbiddenError();
   }
-  const guest = await User.findById(req.params["id"]).exec();
-  if (guest === null) {
+  const { allow } = req.body;
+  if (typeof allow !== "boolean") {
+    throw new ValidatorError("accept", "boolean");
+  }
+  const newU = await User.findById(req.params["id"]).exec();
+  if (newU === null) {
     throw new NotFoundError();
   }
-  if (guest.role !== "guest") {
-    throw new ConflictError("User is not a guest");
+  if (newU.role !== "new") {
+    throw new ConflictError("User is not new");
   }
-  if (user.role === "moderator" && user.class !== guest.class) {
+  if (user.role === "moderator" && user.class !== newU.class) {
     throw new ForbiddenError();
   }
-  const { action } = req.body;
-  if (action === "accept") {
-    guest.role = "user";
-    await guest.save();
-    res.json(guest.prepare());
+  if (allow) {
+    newU.role = "user";
+    await newU.save();
+    res.json(newU.prepare());
+  } else {
+    newU.role = "guest";
+    await newU.save();
+    res.json(newU.prepare());
   }
 }

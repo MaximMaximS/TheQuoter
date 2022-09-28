@@ -166,6 +166,7 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
     reactions: {
       type: [ReactionSchema],
       default: [],
+      required: true,
     },
   },
   {
@@ -179,7 +180,9 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
     const classDoc = await Class.findById(this.class).exec();
     const originatorDoc = await Person.findById(this.originator).exec();
     if (originatorDoc === null) {
-      throw new ServerError(`Orginator for quote ${this._id} not found`);
+      throw new ServerError(
+        `Orginator for quote ${this._id.toString()} not found`
+      );
     }
     const doc: IPreparedQuote = {
       _id: this._id,
@@ -254,6 +257,9 @@ function canUser(
 QuoteSchema.method<QuoteType>(
   "can",
   function (user: UserType, operation: Operation) {
+    if (user.role === "new") {
+      return false;
+    }
     if (user.role === "admin") {
       return true;
     }

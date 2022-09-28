@@ -16,6 +16,8 @@
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
+    "plugin:@typescript-eslint/recommended-requiring-type-checking",
+    "plugin:@typescript-eslint/strict",
     "plugin:import/recommended",
     "plugin:import/typescript",
     "plugin:jest/recommended",
@@ -53,7 +55,10 @@
     ],
     "node/no-missing-import": "off",
     "unicorn/prefer-top-level-await": "off",
-    "unicorn/prevent-abbreviations": "off"
+    "unicorn/prevent-abbreviations": "off",
+
+    "@typescript-eslint/no-unsafe-member-access": "off",
+    "@typescript-eslint/no-unsafe-assignment": "off"
   },
   "ignorePatterns": ["**/node_modules/**", "**/dist/**"]
 }

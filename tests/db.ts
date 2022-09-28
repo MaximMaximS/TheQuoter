@@ -9,7 +9,7 @@ let mongod: MongoMemoryServer | undefined;
 
 export async function init() {
   mongod = await MongoMemoryServer.create();
-  mongoose.connect(mongod.getUri());
+  await mongoose.connect(mongod.getUri());
 }
 
 export async function closeDatabase() {
@@ -42,32 +42,31 @@ export const classId = new mongoose.Types.ObjectId();
 export const personId = new mongoose.Types.ObjectId();
 
 export async function fillDatabase() {
+  await Class.create({
+    _id: classId,
+    name: "Class 1",
+  });
+  await Class.create({
+    name: "Class 2",
+  });
   const admin = await User.create({
     username: "admin",
     email: "a.b@c.dd",
     password: "adminadmin",
     role: "admin",
+    class: classId,
   });
   const user = await User.create({
     username: "user",
     email: "e.f@g.hh",
     password: "useruser",
     role: "user",
+    class: classId,
   });
   const teacher = await Person.create({
     _id: personId,
     name: "teacher",
     type: "teacher",
-    createdBy: admin._id,
-  });
-  await Class.create({
-    _id: classId,
-    name: "Class 1",
-    createdBy: admin._id,
-  });
-  await Class.create({
-    name: "Class 2",
-    createdBy: admin._id,
   });
   await Quote.create({
     text: "Quote 1",

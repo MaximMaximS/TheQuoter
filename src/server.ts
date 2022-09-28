@@ -19,9 +19,9 @@ async function main() {
   await mongoose.connect(process.env["MONGODB_URI"]);
 
   // Run the server
-  app.listen(port, async () => {
+  app.listen(port, () => {
     console.info(`Server running on http://localhost:${port}`);
   });
 }
 
-main(); // Entry point
+void main(); // Entry point

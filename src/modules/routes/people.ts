@@ -4,6 +4,10 @@ import { ForbiddenError, NotFoundError } from "../errors";
 import { enforceUser, escapeRegExp, string, stringOrUndefined } from "../utils";
 
 export async function getPersonRoute(req: Request, res: Response) {
+  const user = await enforceUser(req.headers.authorization);
+  if (user.role === "new") {
+    throw new NotFoundError();
+  }
   const personFound = await Person.findById(req.params["id"]).exec();
   if (personFound === null) {
     throw new NotFoundError();
@@ -12,6 +16,11 @@ export async function getPersonRoute(req: Request, res: Response) {
 }
 
 export async function searchPeopleRoute(req: Request, res: Response) {
+  const user = await enforceUser(req.headers.authorization);
+  if (user.role === "new") {
+    res.json([]);
+    return;
+  }
   const name = stringOrUndefined(req.query["name"], "name");
   const type = stringOrUndefined(req.query["type"], "type");
 
