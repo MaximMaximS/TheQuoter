@@ -9,8 +9,8 @@ interface IUser {
   username: string;
   password: string;
   email: string;
-  role: "admin" | "moderator" | "user" | "guest" | "new";
-  class: Types.ObjectId;
+  role: "admin" | "moderator" | "user" | "guest";
+  class: Types.ObjectId | undefined;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,8 +19,8 @@ export interface IPreparedUser {
   _id: Types.ObjectId;
   username: string;
   email: string;
-  role: "admin" | "moderator" | "user" | "guest" | "new";
-  class: Types.ObjectId;
+  role: "admin" | "moderator" | "user" | "guest";
+  class: Types.ObjectId | undefined;
 }
 
 interface IUserMethods {
@@ -58,13 +58,15 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     role: {
       type: String,
       required: true,
-      enum: ["admin", "moderator", "user", "guest", "new"],
-      default: "new",
+      enum: ["admin", "moderator", "user", "guest"],
+      default: "guest",
     },
     class: {
       type: Schema.Types.ObjectId,
       ref: "Class",
-      required: true,
+      required(this: IUser) {
+        this.role !== "guest";
+      },
     },
   },
   { timestamps: true }

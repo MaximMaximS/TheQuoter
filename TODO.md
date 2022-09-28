@@ -4,7 +4,11 @@
 
 - [ ] Add logging
 - [ ] Add dialogs
+- [ ] Protection
+  - [ ] Limit requests
 - [ ] Single Sign on / Sign in with Google
+- [ ] Public quote editing
+- [ ] User banning and purging
 
 ### Postponed
 

@@ -21,7 +21,9 @@ import {
   searchQuotesRoute,
 } from "./routes/quotes";
 import {
+  approveGuest,
   getUserRoute,
+  listGuests,
   loginUserRoute,
   registerUserRoute,
 } from "./routes/users";
@@ -36,12 +38,26 @@ router
   .post(asyncMiddleware(registerUserRoute))
   .all(methodNotAllowed);
 
-router.route("/users/:id").get(asyncMiddleware(getUserRoute));
-
 router
   .route("/login")
   // Login
   .post(asyncMiddleware(loginUserRoute))
+  .all(methodNotAllowed);
+
+router
+  .route("/guests")
+  // List all guests that have pending class
+  .get(asyncMiddleware(listGuests))
+  .all(methodNotAllowed);
+
+router
+  .route("/users/:id")
+  .get(asyncMiddleware(getUserRoute))
+  .all(methodNotAllowed);
+
+router
+  .route("/users/:id/approve")
+  .post(asyncMiddleware(approveGuest))
   .all(methodNotAllowed);
 
 router
@@ -81,7 +97,7 @@ router
   .all(methodNotAllowed);
 
 router
-  .route("/quotes/random")
+  .route("/randquote")
   // Get random quote
   .get(asyncMiddleware(randomQuoteRoute))
   .all(methodNotAllowed);

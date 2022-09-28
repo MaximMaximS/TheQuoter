@@ -28,7 +28,7 @@ export async function clearDatabase() {
   }
 }
 
-export async function getToken(who: "admin" | "user") {
+export async function getToken(who: string) {
   process.env["JWT_SECRET"] = "secret";
   const user = await User.findOne({ username: who }).exec();
   if (user === null) {
@@ -46,8 +46,10 @@ export async function fillDatabase() {
     _id: classId,
     name: "Class 1",
   });
+  const classId2 = new mongoose.Types.ObjectId();
   await Class.create({
     name: "Class 2",
+    _id: classId2,
   });
   const admin = await User.create({
     username: "admin",
@@ -62,6 +64,28 @@ export async function fillDatabase() {
     password: "useruser",
     role: "user",
     class: classId,
+  });
+  await User.create({
+    email: "example@example.com",
+    username: "pablo",
+    password: "12345678",
+    class: classId,
+  });
+  // Moderator from class
+  await User.create({
+    email: "example.moderator1@example.com",
+    username: "moderator1",
+    password: "12345678",
+    class: classId,
+    role: "moderator",
+  });
+  // Moderator from another class
+  await User.create({
+    email: "example.moderator2@example.com",
+    username: "moderator2",
+    password: "12345678",
+    class: classId2,
+    role: "moderator",
   });
   const teacher = await Person.create({
     _id: personId,

@@ -257,9 +257,6 @@ function canUser(
 QuoteSchema.method<QuoteType>(
   "can",
   function (user: UserType, operation: Operation) {
-    if (user.role === "new") {
-      return false;
-    }
     if (user.role === "admin") {
       return true;
     }

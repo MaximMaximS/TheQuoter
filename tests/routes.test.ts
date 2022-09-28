@@ -1,4 +1,3 @@
-import type { Types } from "mongoose";
 import request from "supertest";
 import app from "../src/modules/app";
 import {
@@ -134,31 +133,8 @@ describe("classes", () => {
 });
 
 describe("users", () => {
-  test("Register", async () => {
+  test("Registration flow", async () => {
     process.env["JWT_SECRET"] = "secret";
-    const res = await request(app)
-      .post("/register")
-      .send({
-        email: "example@example.com",
-        username: "pablo",
-        password: "12345678",
-        class: classId,
-      })
-      .set("Content-Type", "application/json")
-      .expect("Content-Type", /json/)
-      .expect(201);
-
-    const user: {
-      username: string;
-      email: string;
-      role: string;
-      class: Types.ObjectId;
-    } = res.body.user;
-
-    expect(user.username).toBe("pablo");
-    expect(user.email).toBe("example@example.com");
-    expect(user.role).toBe("new");
-    expect(user.class.toString()).toBe(classId.toString());
 
     // Expect 400 if duplicate email
     await request(app)
@@ -207,6 +183,105 @@ describe("users", () => {
       })
       .set("Content-Type", "application/json")
       .expect(400);
+
+    let res = await request(app)
+      .post("/register")
+      .send({
+        email: "example4@example.com",
+        username: "pablus",
+        password: "12345678",
+        class: classId,
+      })
+      .set("Content-Type", "application/json")
+      .expect("Content-Type", /json/)
+      .expect(201);
+
+    expect(res.body.user.username).toBe("pablus");
+    expect(res.body.user.email).toBe("example4@example.com");
+    expect(res.body.user.role).toBe("guest");
+    expect(res.body.user.class).toBe(classId.toString());
+
+    // Get list of guests
+    // Expect 401
+    await request(app).get("/guests").expect(401);
+
+    let token = await getToken("user");
+
+    // Expect 403
+    await request(app)
+      .get("/guests")
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403);
+
+    token = await getToken("moderator2");
+    // Expect no results
+    res = await request(app)
+      .get("/guests")
+      .set("Authorization", `Bearer ${token}`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body).toHaveLength(0);
+
+    token = await getToken("moderator1");
+    // Expect 1 result
+    res = await request(app)
+      .get("/guests")
+      .set("Authorization", `Bearer ${token}`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body).toHaveLength(2);
+    expect(res.body[0].role).toBe("guest");
+    expect(res.body[0].class).toBe(classId.toString());
+
+    // Approve user
+    const uid: string = res.body[0]._id;
+    const uid2: string = res.body[1]._id;
+    // Expect 401
+    await request(app).post(`/users/${uid}/approve`).expect(401);
+
+    token = await getToken("user");
+    // Expect 403
+    await request(app)
+      .post(`/users/${uid}/approve`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(403);
+
+    token = await getToken("moderator2");
+
+    // Expect 404
+    await request(app)
+      .post(`/users/${uid}/approve`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(404);
+
+    token = await getToken("moderator1");
+
+    // Expect 400 if no approve boolean
+    await request(app)
+      .post(`/users/${uid}/approve`)
+      .set("Authorization", `Bearer ${token}`)
+      .expect(400);
+
+    // Expect 200 if valid
+    res = await request(app)
+      .post(`/users/${uid}/approve`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ approve: true })
+      .expect("Content-Type", /json/)
+      .expect(200);
+
+    expect(res.body.role).toBe("user");
+    expect(res.body.class).toBe(classId.toString());
+
+    // Decline
+    res = await request(app)
+      .post(`/users/${uid2}/approve`)
+      .set("Authorization", `Bearer ${token}`)
+      .send({ approve: false })
+      .expect(200);
+
+    expect(res.body.role).toBe("guest");
+    expect(res.body.class).toBeUndefined();
   });
 
   test("Login", async () => {
