@@ -16,6 +16,8 @@ export function genValidatorMessage(path: string, kind: string) {
       return `${path} can be only "pending" or "public"`;
     case "boolean":
       return `${path} must be a boolean`;
+    case "number":
+      return `${path} must be a number`;
     default:
       return `${path} is not valid (${kind})`;
   }

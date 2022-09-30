@@ -23,10 +23,16 @@ export interface IPreparedUser {
   class: Types.ObjectId | undefined;
 }
 
+export type Operation = "view" | "promote" | "remove";
+
+type UserTypeA = Document<Types.ObjectId, unknown, IUser> &
+  IUser & { _id: Types.ObjectId };
+
 interface IUserMethods {
   prepare(): IPreparedUser;
   isValidPassword(password: string): boolean;
   genToken(): string;
+  can(user: UserTypeA, opertation: Operation): boolean;
 }
 
 export type UserModel = Model<IUser, unknown, IUserMethods>;
@@ -84,8 +90,7 @@ UserSchema.pre("save", function (next) {
   next();
 });
 
-export type UserType = Document<Types.ObjectId, unknown, IUser> &
-  IUser & { _id: Types.ObjectId } & IUserMethods;
+export type UserType = UserTypeA & IUserMethods;
 
 UserSchema.method<UserType>("prepare", function (): IPreparedUser {
   return {
@@ -116,5 +121,29 @@ UserSchema.method<UserType>("genToken", function () {
     }
   );
 });
+
+// Permissions resolver
+UserSchema.method<UserType>(
+  "can",
+  function (user: UserTypeA, operation: Operation) {
+    if (user.role === "admin") {
+      return true;
+    }
+    if (this._id === user._id) {
+      return operation !== "promote";
+    }
+    if (user.role !== "moderator") {
+      return false;
+    }
+    if (user.class === undefined) {
+      throw new ServerError(`Moderator ${user._id.toString()} has no class`);
+    }
+    if (this.class === undefined) {
+      return false;
+    }
+
+    return user.class.equals(this.class);
+  }
+);
 
 export default model<IUser, UserModel>("User", UserSchema, "users");

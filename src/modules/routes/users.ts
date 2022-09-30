@@ -5,10 +5,9 @@ import {
   ForbiddenError,
   IncorrectLoginError,
   NotFoundError,
-  ServerError,
   ValidatorError,
 } from "../errors";
-import { enforceUser, id, string } from "../utils";
+import { enforceUser, idOrUndefined, string } from "../utils";
 
 export async function registerUserRoute(req: Request, res: Response) {
   // Try to create a new user
@@ -16,7 +15,7 @@ export async function registerUserRoute(req: Request, res: Response) {
     username: string(req.body.username, "username"),
     password: string(req.body.password, "password"),
     email: string(req.body.email, "email"),
-    class: id(req.body.class, "class"),
+    class: idOrUndefined(req.body.class, "class"),
   });
   // Successfully created a new user
   res.status(201).json({
@@ -55,7 +54,7 @@ export async function getUserRoute(req: Request, res: Response) {
   if (user === null) {
     throw new NotFoundError();
   }
-  if (!user._id.equals(cUser._id) && cUser.role !== "admin") {
+  if (!user.can(cUser, "view")) {
     throw new NotFoundError();
   }
   res.json(user.prepare());
@@ -67,19 +66,19 @@ export async function listGuests(req: Request, res: Response) {
   if (user.role !== "admin" && user.role !== "moderator") {
     throw new ForbiddenError();
   }
-  if (user.role === "moderator") {
-    const users = await User.find({
-      role: "guest",
-      class: user.class,
-    }).exec();
-    res.json(users.map((u) => u.prepare()));
-  } else {
-    const users = await User.find({
-      role: "guest",
-      class: { $ne: undefined },
-    }).exec();
-    res.json(users.map((u) => u.prepare()));
-  }
+  // Find all guests that have a any class
+  const guests = await User.find({
+    role: "guest",
+    class: {
+      $exists: true,
+    },
+  }).exec();
+
+  // Filter out guests that the user can't see
+  const filtered = guests
+    .filter((guest) => guest.can(user, "view"))
+    .map((g) => g.prepare());
+  res.json(filtered);
 }
 
 // Post allow or decline a guest to join a class become a user
@@ -95,28 +94,27 @@ export async function approveGuest(req: Request, res: Response) {
   if (guest === null) {
     throw new NotFoundError();
   }
-  // 500 if moderator does not have class
-  if (user.class === undefined) {
-    throw new ServerError("Database anomaly");
+
+  if (!guest.can(user, "view")) {
+    throw new NotFoundError();
   }
-  // When guest doesn't request to join a class, do 409, but only if moderator can view them, otherwise 404
+
+  if (guest.role !== "guest") {
+    throw new ConflictError("User is not a guest");
+  }
   if (guest.class === undefined) {
-    if (user.role === "moderator") {
-      throw new NotFoundError();
-    }
-    throw new ConflictError("class");
-  } else {
-    if (user.role === "moderator" && !guest.class.equals(user.class)) {
-      throw new NotFoundError();
-    }
+    throw new ConflictError("User has no class");
   }
+
   const { approve } = req.body;
   if (typeof approve !== "boolean") {
     throw new ValidatorError("approve", "boolean");
   }
-  if (guest.role !== "guest") {
-    throw new ConflictError("User is not guest");
+
+  if (!guest.can(user, "promote")) {
+    throw new ForbiddenError();
   }
+
   if (approve) {
     guest.role = "user";
     await guest.save();

@@ -19,10 +19,11 @@ TheQuoter (also known as "Hláškomat") ~~is~~ _will be_ server application for 
 
 These permissions aren't implemented yet.
 
-| Role        | View & remove from class | Ban                |
-| ----------- | ------------------------ | ------------------ |
-| `admin`     | :white_check_mark:       | :white_check_mark: |
-| `moderator` | From their class         | :x:                |
+| Role        | View               | Promote to user    | Remove from class  |
+| ----------- | ------------------ | ------------------ | ------------------ |
+| `admin`     | :white_check_mark: | :white_check_mark: | :white_check_mark: |
+| `moderator` | Same class         | Same class         | Same class         |
+| Themself    | :white_check_mark: | :x:                | :white_check_mark: |
 
 #### Quotes
 
@@ -65,16 +66,22 @@ Be aware that the application is not yet fully functional.
 
 Before you can use the application, you need to have a MongoDB cluster running.
 
-### Docker
-
-Create .env file with the following content:
+Env configuration:
 
 ```env
+# Configure theses variables to your liking
+RATELIMIT_WINDOW_MS=60000
+RATELIMIT_DELAY_AFTER=10
+RATELIMIT_DELAY_MS=500
+RATELIMIT_MAX=20
+
 MONGODB_URI=<URI>
 JWT_SECRET=<RANDOM> # Replace with a random string
+
+PORT=<PORT>
 ```
 
-Then run:
+### Docker
 
 ```shell
 # Use the tag from the badge above without the `v`
@@ -82,17 +89,7 @@ docker pull maximmaxims/thequoter:<TAG>
 docker run -p 3000:<PORT> --env-file ".env" maximmaxims/thequoter:<TAG>
 ```
 
-### Build
-
-Create .env file with the following content:
-
-```env
-MONGODB_URI=<URI>
-JWT_SECRET=<RANDOM> # Replace with a random string
-PORT=<PORT>
-```
-
-Then run:
+### Manually
 
 ```shell
 git clone https://github.com/MaximMaximS/TheQuoter.git

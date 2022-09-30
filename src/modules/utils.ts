@@ -83,3 +83,16 @@ export function escapeRegExp(query: string) {
     ? query.replace(chars, "\\$&")
     : query;
 }
+
+export function number(num: unknown, path: string): number {
+  if (typeof num === "number") {
+    return num;
+  }
+  if (typeof num === "string") {
+    const parsed = Number.parseInt(num, 10);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  throw new ValidatorError(path, "number");
+}
