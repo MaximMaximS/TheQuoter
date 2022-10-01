@@ -1,10 +1,30 @@
 import { JsonWebTokenError } from "jsonwebtoken";
 import { Types } from "mongoose";
-import { ValidatorError } from "../src/modules/errors";
+import { ServerError, ValidatorError } from "../src/modules/errors";
 import * as utils from "../src/modules/utils";
 
 describe("utils", () => {
+  // Mock environment variables
+  const env = process.env;
+  beforeEach(() => {
+    jest.resetModules();
+    process.env = { ...env };
+  });
+
+  // Restore environment variables
+  afterEach(() => {
+    process.env = env;
+  });
+
   test("function getUser", async () => {
+    // User is undefined if no auth header
+    // await expect(utils.getUser()).resolves.toBeUndefined();
+
+    // Throw error if JWT_SECRET is not defined
+    await expect(utils.getUser("Bearer foobar")).rejects.toThrow(ServerError);
+
+    // Throw error if token is invalid
+    process.env["JWT_SECRET"] = "secret";
     await expect(utils.getUser("Bearer foobar")).rejects.toThrow(
       JsonWebTokenError
     );

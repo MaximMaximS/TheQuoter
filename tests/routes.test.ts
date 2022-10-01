@@ -13,12 +13,16 @@ beforeAll(async () => {
   await init();
 });
 
+const env = process.env;
 beforeEach(async () => {
   await fillDatabase();
+  jest.resetModules();
+  process.env = { ...env };
 });
 
 afterEach(async () => {
   await clearDatabase();
+  process.env = env;
 });
 
 afterAll(async () => {
@@ -134,6 +138,7 @@ describe("classes", () => {
 
 describe("users", () => {
   test("Registration flow", async () => {
+    process.env["JWT_SECRET"] = "secret";
     // Expect 400 if duplicate email
     await request(app)
       .post("/register")
@@ -283,6 +288,7 @@ describe("users", () => {
   });
 
   test("Login", async () => {
+    process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
       .post("/login")
       .send({
