@@ -4,7 +4,11 @@
 
 - [ ] Add logging
 - [ ] Add dialogs
+- [ ] Protection
+  - [ ] Limit requests
 - [ ] Single Sign on / Sign in with Google
+- [ ] Public quote editing
+- [ ] User banning and purging
 
 ### Postponed
 
@@ -14,8 +18,6 @@
 
 ## In Progress
 
-- [ ] Remake permission system
-
 ## Done ✓
 
 - [x] Quote editing
@@ -24,3 +26,4 @@
 - [x] Change hash field to password
 - [x] Properly implement all permissions
 - [x] Add quote archivation
+- [x] Remake permission system

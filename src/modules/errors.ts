@@ -13,7 +13,11 @@ export function genValidatorMessage(path: string, kind: string) {
     case "ObjectId":
       return `${path} is not a valid ObjectId`;
     case "state":
-      return `${path} can be only "pending" or "public" or "archived"`;
+      return `${path} can be only "pending" or "public"`;
+    case "boolean":
+      return `${path} must be a boolean`;
+    case "number":
+      return `${path} must be a number`;
     default:
       return `${path} is not valid (${kind})`;
   }
@@ -31,13 +35,14 @@ export class ValidatorError extends Error {
 }
 
 export class ServerError extends Error {
-  full?: Error;
+  full: Error;
   constructor(error: Error | string) {
     if (error instanceof Error) {
       super(error.message);
       this.full = error;
     } else {
       super(error);
+      this.full = new Error(error);
     }
     this.name = "ServerError";
   }

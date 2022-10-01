@@ -5,7 +5,6 @@ import uniqueValidator from "mongoose-unique-validator";
 interface IPerson {
   name: string;
   type: "teacher" | "student" | "other";
-  createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -35,11 +34,6 @@ const PersonSchema = new Schema<IPerson, PersonModel, IPersonMethods>(
       type: String,
       required: true,
       enum: ["teacher", "student", "other"],
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
     },
   },
   { timestamps: true }
