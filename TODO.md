@@ -18,8 +18,6 @@
 
 ## In Progress
 
-- [ ] Remake permission system
-
 ## Done ✓
 
 - [x] Quote editing
@@ -28,3 +26,4 @@
 - [x] Change hash field to password
 - [x] Properly implement all permissions
 - [x] Add quote archivation
+- [x] Remake permission system

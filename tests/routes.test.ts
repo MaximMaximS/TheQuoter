@@ -63,10 +63,17 @@ describe("people", () => {
   });
 
   test("POST /people", async () => {
-    const token = await getToken("admin");
-
     // Expect 401 if not logged in
     await request(app).post("/people").expect(401);
+
+    // Expect 403 if not admin
+    const user = await getToken("user");
+    await request(app)
+      .post("/people")
+      .set("Authorization", `Bearer ${user}`)
+      .expect(403);
+
+    const token = await getToken("admin");
 
     // Expect 400 if no name
     await request(app)
@@ -133,6 +140,37 @@ describe("classes", () => {
       .expect("Content-Type", /json/)
       .expect(200);
     expect(res.body).toHaveLength(0);
+  });
+
+  test("POST /classes", async () => {
+    // Expect 401 if not logged in
+    await request(app).post("/classes").expect(401);
+
+    // Expect 403 if user
+    const user = await getToken("user");
+    await request(app)
+      .post("/classes")
+      .set("Authorization", `Bearer ${user}`)
+      .send({ name: "obama" })
+      .expect(403);
+
+    const token = await getToken("admin");
+
+    // Expect 400 if empty
+    await request(app)
+      .post("/classes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({})
+      .expect(400);
+
+    // Expect 201 if valid
+    const res = await request(app)
+      .post("/classes")
+      .set("Authorization", `Bearer ${token}`)
+      .send({ name: "obama" })
+      .expect(201);
+
+    expect(res.body.name).toBe("obama");
   });
 });
 
