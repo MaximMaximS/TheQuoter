@@ -3,6 +3,7 @@ import idValidator from "mongoose-id-validator";
 import { ServerError } from "../errors";
 import Class, { IPreparedClass } from "./class";
 import Person, { IPreparedPerson } from "./person";
+import type { UserType } from "./user";
 
 interface IReaction {
   like: boolean;
@@ -68,17 +69,18 @@ CommentSchema.method<IComment>("resolveLikes", function () {
   return this.reactions.filter((el) => el.like).length;
 });
 
-export type State = "pending" | "public" | "archived";
+type State = "pending" | "public";
+type Operation = "create" | "view" | "edit" | "publish" | "delete";
 
 interface IQuote {
   state: State;
-  context?: string | undefined;
+  context: string | undefined;
   text: string;
-  note?: string | undefined;
+  note: string | undefined;
   originator: Types.ObjectId;
-  class?: Types.ObjectId | undefined;
+  class: Types.ObjectId | undefined;
   createdBy: Types.ObjectId;
-  approvedBy?: Types.ObjectId | undefined;
+  approvedBy: Types.ObjectId | undefined;
   reactions: IReaction[];
   createdAt: Date;
   updatedAt: Date;
@@ -97,6 +99,7 @@ export interface IPreparedQuote {
 interface IQuoteMethodsAndOverrides {
   prepare(): Promise<IPreparedQuote>;
   resolveLikes(): number;
+  can(user: UserType, opertation: Operation): boolean;
 
   reactions: Types.DocumentArray<IReaction>;
 }
@@ -110,7 +113,7 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
   {
     state: {
       type: String,
-      enum: ["pending", "public", "archived"],
+      enum: ["pending", "public"],
       default: "pending",
     },
     context: {
@@ -163,6 +166,7 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
     reactions: {
       type: [ReactionSchema],
       default: [],
+      required: true,
     },
   },
   {
@@ -176,7 +180,9 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
     const classDoc = await Class.findById(this.class).exec();
     const originatorDoc = await Person.findById(this.originator).exec();
     if (originatorDoc === null) {
-      throw new ServerError(`Orginator for quote ${this._id} not found`);
+      throw new ServerError(
+        `Orginator for quote ${this._id.toString()} not found`
+      );
     }
     const doc: IPreparedQuote = {
       _id: this._id,
@@ -194,6 +200,82 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
 QuoteSchema.method<IQuote>("resolveLikes", function () {
   return this.reactions.filter((el) => el.like).length;
 });
+
+// Cognitive Complexity ._.
+function canModerator(
+  user: UserType,
+  quote: QuoteType,
+  operation: "create" | "view" | "edit" | "delete"
+) {
+  switch (operation) {
+    case "create":
+      return (
+        (quote.state === "public" && quote.class === user.class) ||
+        (quote.state === "pending" && quote.class === undefined)
+      );
+
+    case "view":
+      return (
+        (quote.state === "public" &&
+          (quote.class === undefined || quote.class === user.class)) ||
+        (quote.state === "pending" &&
+          (quote.class === user.class || quote.originator === user._id))
+      );
+
+    default:
+      return (
+        quote.state === "pending" &&
+        (quote.class === user.class || quote.originator === user._id)
+      );
+  }
+}
+
+function canUser(
+  user: UserType,
+  quote: QuoteType,
+  operation: "create" | "view" | "edit" | "delete"
+) {
+  switch (operation) {
+    case "create":
+      return (
+        quote.state === "pending" &&
+        (quote.class === user.class || quote.class === undefined)
+      );
+    case "view":
+      return (
+        (quote.state === "public" &&
+          (quote.class === user.class || quote.class === undefined)) ||
+        (quote.state === "pending" && quote.originator === user._id)
+      );
+
+    default:
+      return quote.state === "pending" && quote.originator === user._id;
+  }
+}
+
+// Permissions resolver
+QuoteSchema.method<QuoteType>(
+  "can",
+  function (user: UserType, operation: Operation) {
+    if (user.role === "admin") {
+      return true;
+    }
+    if (user.role === "guest") {
+      return this.state === "public" && this.class === undefined;
+    }
+    if (operation === "publish") {
+      return (
+        user.role === "moderator" &&
+        this.state === "pending" &&
+        this.class === user.class
+      );
+    }
+    if (user.role === "moderator") {
+      return canModerator(user, this, operation);
+    }
+    return canUser(user, this, operation);
+  }
+);
 
 QuoteSchema.plugin(idValidator);
 

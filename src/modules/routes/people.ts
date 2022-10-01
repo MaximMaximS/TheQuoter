@@ -1,12 +1,7 @@
 import type { Request, Response } from "express";
 import Person from "../models/person";
-import { NotFoundError } from "../errors";
-import {
-  enforcePermit,
-  escapeRegExp,
-  string,
-  stringOrUndefined,
-} from "../utils";
+import { ForbiddenError, NotFoundError } from "../errors";
+import { enforceUser, escapeRegExp, string, stringOrUndefined } from "../utils";
 
 export async function getPersonRoute(req: Request, res: Response) {
   const personFound = await Person.findById(req.params["id"]).exec();
@@ -32,11 +27,14 @@ export async function searchPeopleRoute(req: Request, res: Response) {
 }
 
 export async function createPersonRoute(req: Request, res: Response) {
-  const user = await enforcePermit(req.headers.authorization, "admin");
-  const { _id } = await Person.create({
+  const user = await enforceUser(req.headers.authorization);
+  if (user.role !== "admin") {
+    throw new ForbiddenError();
+  }
+  const person = await Person.create({
     name: string(req.body.name, "name"),
     type: string(req.body.type, "type"),
     createdBy: user._id,
   });
-  res.status(201).json({ _id });
+  res.status(201).json(person.prepare());
 }

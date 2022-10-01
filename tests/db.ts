@@ -9,7 +9,7 @@ let mongod: MongoMemoryServer | undefined;
 
 export async function init() {
   mongod = await MongoMemoryServer.create();
-  mongoose.connect(mongod.getUri());
+  await mongoose.connect(mongod.getUri());
 }
 
 export async function closeDatabase() {
@@ -28,77 +28,81 @@ export async function clearDatabase() {
   }
 }
 
-export async function createUsers() {
-  await User.create({
-    username: "admin",
-    email: "a.b@c.dd",
-    password: "adminadmin",
-    role: "admin",
-  });
-  await User.create({
-    username: "user",
-    email: "e.f@g.hh",
-    password: "useruser",
-    role: "user",
-  });
+export async function getToken(who: string) {
+  process.env["JWT_SECRET"] = "secret";
+  const user = await User.findOne({ username: who }).exec();
+  if (user === null) {
+    throw new Error("User not found");
+  }
+  return user.genToken();
 }
 
 export const classId = new mongoose.Types.ObjectId();
 
-export async function createClasses() {
-  await createUsers();
-  const admin = await User.findOne({ username: "admin" }).exec();
-  if (admin === null) {
-    throw new Error("admin is null");
-  }
+export const personId = new mongoose.Types.ObjectId();
+
+export async function fillDatabase() {
   await Class.create({
     _id: classId,
     name: "Class 1",
-    createdBy: admin._id,
   });
+  const classId2 = new mongoose.Types.ObjectId();
   await Class.create({
     name: "Class 2",
-    createdBy: admin._id,
+    _id: classId2,
   });
-}
-
-export const personId = new mongoose.Types.ObjectId();
-
-export async function createPeople() {
-  await createUsers();
-  const admin = await User.findOne({ username: "admin" }).exec();
-  if (admin === null) {
-    throw new Error("admin is null");
-  }
-  await Person.create({
+  const admin = await User.create({
+    username: "admin",
+    email: "a.b@c.dd",
+    password: "adminadmin",
+    role: "admin",
+    class: classId,
+  });
+  const user = await User.create({
+    username: "user",
+    email: "e.f@g.hh",
+    password: "useruser",
+    role: "user",
+    class: classId,
+  });
+  await User.create({
+    email: "example@example.com",
+    username: "pablo",
+    password: "12345678",
+    class: classId,
+  });
+  // Moderator from class
+  await User.create({
+    email: "example.moderator1@example.com",
+    username: "moderator1",
+    password: "12345678",
+    class: classId,
+    role: "moderator",
+  });
+  // Moderator from another class
+  await User.create({
+    email: "example.moderator2@example.com",
+    username: "moderator2",
+    password: "12345678",
+    class: classId2,
+    role: "moderator",
+  });
+  const teacher = await Person.create({
     _id: personId,
     name: "teacher",
     type: "teacher",
-    createdBy: admin._id,
   });
-  /*
-  await Person.create({
-    name: "student",
-    type: "student",
-    createdBy: admin._id,
-  });
-  */
-}
-
-export async function createQuotes() {
-  await createUsers();
-  const admin = await User.findOne({ username: "admin" }).exec();
-  if (admin === null) {
-    throw new Error("admin is null");
-  }
-  const teacher = await Person.findOne({ name: "teacher" }).exec();
-  if (teacher === null) {
-    throw new Error("teacher is null");
-  }
-
   await Quote.create({
     text: "Quote 1",
+    state: "public",
     originator: teacher._id,
     createdBy: admin._id,
+    approvedBy: admin._id,
+  });
+
+  await Quote.create({
+    text: "Quote 2",
+    originator: teacher._id,
+    createdBy: user._id,
   });
 }

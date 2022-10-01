@@ -4,41 +4,28 @@ import User from "./models/user";
 import { IncorrectLoginError, ServerError, ValidatorError } from "./errors";
 
 // Get user from authorization header
-export async function getUser(authHeader?: string) {
-  if (authHeader !== undefined) {
-    // Slice off Bearer prefix
-    const token = authHeader.split(" ")[1] || "";
-    if (process.env["JWT_SECRET"] === undefined) {
-      throw new ServerError("JWT_SECRET is not defined");
-    }
-    const uid = verify(token, process.env["JWT_SECRET"]);
-    // Check if id is not an object
-    if (typeof uid === "string") {
-      return;
-    }
-    const user = await User.findById(uid["id"]).exec();
-    if (user !== null) {
-      return user;
-    }
+export async function getUser(authHeader: string) {
+  // Slice off Bearer prefix
+  const token = authHeader.split(" ")[1] ?? "";
+  if (process.env["JWT_SECRET"] === undefined) {
+    throw new ServerError("JWT_SECRET is not defined");
   }
-  // Required due to typescript
-  // eslint-disable-next-line sonarjs/no-redundant-jump
-  return;
+  const uid = verify(token, process.env["JWT_SECRET"]);
+  // Check if id is not an object
+  if (typeof uid === "string") {
+    return;
+  }
+  const user = await User.findById(uid["id"]).exec();
+  return user !== null ? user : undefined;
 }
 
 // Get user from request and check if user has permit
-export async function enforcePermit(
-  authHeader: string | undefined,
-  permit: "user" | "moderator" | "admin" | Types.ObjectId
-) {
+export async function enforceUser(authHeader: string | undefined) {
   // Verify token
-  const user = await getUser(authHeader);
+  const user = authHeader !== undefined ? await getUser(authHeader) : undefined;
   // If admin false then enforce moderator or admin, otherwise enforce admin
   if (user === undefined) {
     throw new IncorrectLoginError();
-  }
-  if (permit !== "user") {
-    user.requirePermit(permit);
   }
   return user;
 }
@@ -95,4 +82,17 @@ export function escapeRegExp(query: string) {
   return new RegExp(chars.source).test(query)
     ? query.replace(chars, "\\$&")
     : query;
+}
+
+export function number(num: unknown, path: string): number {
+  if (typeof num === "number") {
+    return num;
+  }
+  if (typeof num === "string") {
+    const parsed = Number.parseInt(num, 10);
+    if (!Number.isNaN(parsed)) {
+      return parsed;
+    }
+  }
+  throw new ValidatorError(path, "number");
 }

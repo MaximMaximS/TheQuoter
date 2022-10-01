@@ -16,13 +16,14 @@ import {
   deleteQuoteRoute,
   editQuoteRoute,
   getQuoteRoute,
+  publishRoute,
   randomQuoteRoute,
   searchQuotesRoute,
-  setQuoteStateRoute,
 } from "./routes/quotes";
 import {
-  deleteUserRoute,
+  approveGuest,
   getUserRoute,
+  listGuests,
   loginUserRoute,
   registerUserRoute,
 } from "./routes/users";
@@ -30,20 +31,33 @@ import { methodNotAllowed } from "./middleware";
 
 const router = Router();
 
+// /register
 router
-  .route("/users")
-  // Register
+  .route("/register")
+  // Register a new user
   .post(asyncMiddleware(registerUserRoute))
-  // Delete OWN user (development only)
-  .delete(asyncMiddleware(deleteUserRoute))
   .all(methodNotAllowed);
 
-router.route("/users/:id").get(asyncMiddleware(getUserRoute));
-
 router
-  .route("/users/login")
+  .route("/login")
   // Login
   .post(asyncMiddleware(loginUserRoute))
+  .all(methodNotAllowed);
+
+router
+  .route("/guests")
+  // List all guests that have pending class
+  .get(asyncMiddleware(listGuests))
+  .all(methodNotAllowed);
+
+router
+  .route("/users/:id")
+  .get(asyncMiddleware(getUserRoute))
+  .all(methodNotAllowed);
+
+router
+  .route("/users/:id/approve")
+  .post(asyncMiddleware(approveGuest))
   .all(methodNotAllowed);
 
 router
@@ -83,7 +97,7 @@ router
   .all(methodNotAllowed);
 
 router
-  .route("/quotes/random")
+  .route("/randquote")
   // Get random quote
   .get(asyncMiddleware(randomQuoteRoute))
   .all(methodNotAllowed);
@@ -99,8 +113,8 @@ router
   .all(methodNotAllowed);
 
 router
-  .route("/quotes/:id/state")
-  .post(asyncMiddleware(setQuoteStateRoute))
+  .route("/quotes/:id/publish")
+  .post(asyncMiddleware(publishRoute))
   .all(methodNotAllowed);
 
 // It's 5!

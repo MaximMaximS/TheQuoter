@@ -3,14 +3,14 @@ import jwt from "jsonwebtoken";
 import { Document, Model, Schema, Types, model } from "mongoose";
 import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
-import { ForbiddenError, ServerError, ValidatorError } from "../errors";
+import { ServerError, ValidatorError } from "../errors";
 
 interface IUser {
   username: string;
   password: string;
   email: string;
-  role: "admin" | "moderator" | "user";
-  class: Types.ObjectId;
+  role: "admin" | "moderator" | "user" | "guest";
+  class: Types.ObjectId | undefined;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -19,15 +19,20 @@ export interface IPreparedUser {
   _id: Types.ObjectId;
   username: string;
   email: string;
-  role: "admin" | "moderator" | "user";
-  class: Types.ObjectId;
+  role: "admin" | "moderator" | "user" | "guest";
+  class: Types.ObjectId | undefined;
 }
+
+export type Operation = "view" | "promote" | "remove";
+
+type UserTypeA = Document<Types.ObjectId, unknown, IUser> &
+  IUser & { _id: Types.ObjectId };
 
 interface IUserMethods {
   prepare(): IPreparedUser;
   isValidPassword(password: string): boolean;
   genToken(): string;
-  requirePermit(permit: "admin" | "moderator" | Types.ObjectId): void;
+  can(user: UserTypeA, opertation: Operation): boolean;
 }
 
 export type UserModel = Model<IUser, unknown, IUserMethods>;
@@ -59,12 +64,15 @@ const UserSchema = new Schema<IUser, UserModel, IUserMethods>(
     role: {
       type: String,
       required: true,
-      enum: ["admin", "moderator", "user"],
-      default: "user",
+      enum: ["admin", "moderator", "user", "guest"],
+      default: "guest",
     },
     class: {
       type: Schema.Types.ObjectId,
       ref: "Class",
+      required(this: IUser) {
+        this.role !== "guest";
+      },
     },
   },
   { timestamps: true }
@@ -82,8 +90,7 @@ UserSchema.pre("save", function (next) {
   next();
 });
 
-export type UserType = Document<Types.ObjectId, unknown, IUser> &
-  IUser & { _id: Types.ObjectId } & IUserMethods;
+export type UserType = UserTypeA & IUserMethods;
 
 UserSchema.method<UserType>("prepare", function (): IPreparedUser {
   return {
@@ -115,24 +122,27 @@ UserSchema.method<UserType>("genToken", function () {
   );
 });
 
+// Permissions resolver
 UserSchema.method<UserType>(
-  "requirePermit",
-  function (permit: "admin" | "moderator" | Types.ObjectId) {
-    if (this.role === "user") {
-      throw new ForbiddenError();
+  "can",
+  function (user: UserTypeA, operation: Operation) {
+    if (user.role === "admin") {
+      return true;
     }
-    // If user is admin, return
-    if (this.role === "admin") {
-      return;
+    if (this._id === user._id) {
+      return operation !== "promote";
     }
-    // If admin is required, throw error
-    if (permit === "admin") {
-      throw new ForbiddenError();
+    if (user.role !== "moderator") {
+      return false;
     }
-    // If user is user, check if permit is user
-    if (typeof permit !== "string" && !permit.equals(this.class)) {
-      throw new ForbiddenError();
+    if (user.class === undefined) {
+      throw new ServerError(`Moderator ${user._id.toString()} has no class`);
     }
+    if (this.class === undefined) {
+      return false;
+    }
+
+    return user.class.equals(this.class);
   }
 );
 

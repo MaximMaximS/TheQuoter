@@ -4,7 +4,6 @@ import uniqueValidator from "mongoose-unique-validator";
 
 interface IClass {
   name: string;
-  createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,11 +27,6 @@ const ClassSchema = new Schema<IClass, ClassModel, IClassMethods>(
       trim: true,
       required: true,
       unique: true,
-    },
-    createdBy: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
     },
   },
   { timestamps: true }
