@@ -41,6 +41,8 @@ export const classId = new mongoose.Types.ObjectId();
 
 export const personId = new mongoose.Types.ObjectId();
 
+export const quoteId = new mongoose.Types.ObjectId();
+
 export async function fillDatabase() {
   await Class.create({
     _id: classId,
@@ -93,6 +95,7 @@ export async function fillDatabase() {
     type: "teacher",
   });
   await Quote.create({
+    _id: quoteId,
     text: "Quote 1",
     state: "public",
     originator: teacher._id,
