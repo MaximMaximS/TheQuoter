@@ -2,6 +2,9 @@ name: CI/CD
 
 on:
   workflow_dispatch:
+  create:
+    tags:
+      - "*"
 
 jobs:
   cd:
@@ -37,9 +40,12 @@ jobs:
       - name: Build app
         run: npm run build
 
+      - name: Get current package version
+        uses: martinbeentjes/npm-get-version-action@v1.2.3
+
       - name: Build and push Docker image
         uses: docker/build-push-action@v3
         with:
           context: .
           push: true
-          tags: maximmaxims/thequoter:${{ github.ref_name }}
+          tags: maximmaxims/thequoter:${{ steps.package-version.outputs.current-version }}
