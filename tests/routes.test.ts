@@ -179,7 +179,7 @@ describe("users", () => {
     process.env["JWT_SECRET"] = "secret";
     // Expect 400 if duplicate email
     await request(app)
-      .post("/register")
+      .post("/account/register")
       .send({
         email: "example@example.com",
         username: "sus",
@@ -191,7 +191,7 @@ describe("users", () => {
 
     // Expect 400 if duplicate username
     await request(app)
-      .post("/register")
+      .post("/account/register")
       .send({
         email: "example2@example.com",
         username: "pablo",
@@ -203,7 +203,7 @@ describe("users", () => {
 
     // Expect 400 if invalid email
     await request(app)
-      .post("/register")
+      .post("/account/register")
       .send({
         email: "example",
         username: "pablo",
@@ -215,7 +215,7 @@ describe("users", () => {
 
     // Expect 400 if invalid password
     await request(app)
-      .post("/register")
+      .post("/account/register")
       .send({
         email: "example3@example.com",
         username: "amogus",
@@ -226,7 +226,7 @@ describe("users", () => {
       .expect(400);
 
     let res = await request(app)
-      .post("/register")
+      .post("/account/register")
       .send({
         email: "example4@example.com",
         username: "pablus",
@@ -328,7 +328,7 @@ describe("users", () => {
   test("Login", async () => {
     process.env["JWT_SECRET"] = "secret";
     const res = await request(app)
-      .post("/login")
+      .post("/account/login")
       .send({
         username: "admin",
         password: "adminadmin",
@@ -343,7 +343,7 @@ describe("users", () => {
 
     // Expect 401 if invalid username
     await request(app)
-      .post("/login")
+      .post("/account/login")
       .send({
         username: "obama",
         password: "adminadmin",
@@ -353,7 +353,7 @@ describe("users", () => {
 
     // Expect 401 if invalid password
     await request(app)
-      .post("/login")
+      .post("/account/login")
       .send({
         username: "admin",
         password: "obama",

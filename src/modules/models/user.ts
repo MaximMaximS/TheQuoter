@@ -82,6 +82,9 @@ UserSchema.plugin(uniqueValidator);
 UserSchema.plugin(idValidator);
 
 UserSchema.pre("save", function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
   if (this.password.length < 6) {
     throw new ValidatorError("password", "minlength");
   }

@@ -5,27 +5,6 @@ import Class, { IPreparedClass } from "./class";
 import Person, { IPreparedPerson } from "./person";
 import type { UserType } from "./user";
 
-interface IReaction {
-  like: boolean;
-  user: Types.ObjectId;
-}
-
-type ReactionModel = Model<IReaction>;
-
-const ReactionSchema = new Schema<IReaction, ReactionModel>({
-  like: {
-    type: Boolean,
-    required: true,
-  },
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-});
-
-ReactionSchema.plugin(idValidator);
-
 type State = "pending" | "public";
 type Operation = "create" | "view" | "edit" | "publish" | "delete";
 
@@ -38,7 +17,7 @@ interface IQuote {
   class: Types.ObjectId | undefined;
   createdBy: Types.ObjectId;
   approvedBy: Types.ObjectId | undefined;
-  reactions: IReaction[];
+  likes: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,22 +30,21 @@ export interface IPreparedQuote {
   originator: IPreparedPerson;
   class: IPreparedClass | undefined;
   state: State;
+  likes: number;
+  liked: boolean;
 }
 
-interface IQuoteMethodsAndOverrides {
-  prepare(): Promise<IPreparedQuote>;
-  resolveLikes(): number;
+interface IQuoteMethods {
+  prepare(user: UserType): Promise<IPreparedQuote>;
   can(user: UserType, opertation: Operation): boolean;
-
-  reactions: Types.DocumentArray<IReaction>;
 }
 
-type QuoteModel = Model<IQuote, unknown, IQuoteMethodsAndOverrides>;
+type QuoteModel = Model<IQuote, unknown, IQuoteMethods>;
 
 export type QuoteType = Document<Types.ObjectId, unknown, IQuote> &
-  IQuote & { _id: Types.ObjectId } & IQuoteMethodsAndOverrides;
+  IQuote & { _id: Types.ObjectId } & IQuoteMethods;
 
-const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
+const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethods>(
   {
     state: {
       type: String,
@@ -120,10 +98,18 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
         return this.state === "public";
       },
     },
-    reactions: {
-      type: [ReactionSchema],
+    likes: {
+      type: [Schema.Types.ObjectId],
+      ref: "User",
       default: [],
       required: true,
+      validate: {
+        // Check for duplicates
+        validator: (v: Types.ObjectId[]) => {
+          const set = new Set(v);
+          return set.size === v.length;
+        },
+      },
     },
   },
   {
@@ -133,7 +119,7 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
 
 QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
   "prepare",
-  async function () {
+  async function (user: UserType) {
     const classDoc = await Class.findById(this.class).exec();
     const originatorDoc = await Person.findById(this.originator).exec();
     if (originatorDoc === null) {
@@ -149,19 +135,12 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
       originator: originatorDoc.prepare(),
       class: classDoc !== null ? classDoc.prepare() : undefined,
       state: this.state,
+      likes: this.likes.length,
+      liked: this.likes.includes(user._id),
     };
     return doc;
   }
 );
-
-QuoteSchema.method<IQuote>("resolveLikes", function () {
-  // If reaction is a like, add 1, else subtract 1
-  let likes = 0;
-  for (const reaction of this.reactions) {
-    likes += reaction.like ? 1 : -1;
-  }
-  return likes;
-});
 
 // Cognitive Complexity ._.
 function canModerator(

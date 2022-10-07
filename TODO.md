@@ -10,13 +10,10 @@
 - [ ] Public quote editing
 - [ ] User banning and purging
 
-### Postponed
-
-- [ ] Reactions
-  - [ ] Likes and dislikes
-  - [ ] Comments
-
 ## In Progress
+
+- [ ] Likes
+- [ ] Other routes
 
 ## Done ✓
 

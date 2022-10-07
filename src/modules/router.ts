@@ -22,6 +22,7 @@ import {
 } from "./routes/quotes";
 import {
   approveGuest,
+  getProfileRoute,
   getUserRoute,
   listGuests,
   loginUserRoute,
@@ -31,15 +32,21 @@ import { methodNotAllowed } from "./middleware";
 
 const router = Router();
 
+router
+  .route("/account")
+  // Get the user's own profile
+  .get(asyncMiddleware(getProfileRoute))
+  .all(methodNotAllowed);
+
 // /register
 router
-  .route("/register")
+  .route("/account/register")
   // Register a new user
   .post(asyncMiddleware(registerUserRoute))
   .all(methodNotAllowed);
 
 router
-  .route("/login")
+  .route("/account/login")
   // Login
   .post(asyncMiddleware(loginUserRoute))
   .all(methodNotAllowed);

@@ -5,15 +5,19 @@ import { IncorrectLoginError, ServerError, ValidatorError } from "./errors";
 
 // Get user from authorization header
 export async function getUser(authHeader: string) {
-  // Slice off Bearer prefix
-  const token = authHeader.split(" ")[1] ?? "";
+  // Check if token begins with "Bearer "
+  if (!authHeader.startsWith("Bearer ")) {
+    throw new IncorrectLoginError();
+  }
+  const token = authHeader.slice(7);
+
   if (process.env["JWT_SECRET"] === undefined) {
     throw new ServerError("JWT_SECRET is not defined");
   }
   const uid = verify(token, process.env["JWT_SECRET"]);
   // Check if id is not an object
   if (typeof uid === "string") {
-    return;
+    throw new ServerError("JWT Payload is not an object");
   }
   const user = await User.findById(uid["id"]).exec();
   return user !== null ? user : undefined;
