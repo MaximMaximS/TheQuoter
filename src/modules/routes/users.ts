@@ -48,6 +48,12 @@ export async function loginUserRoute(req: Request, res: Response) {
   });
 }
 
+// Get the user's own profile
+export async function getProfileRoute(req: Request, res: Response) {
+  const user = await enforceUser(req.headers.authorization);
+  res.json(user.prepare());
+}
+
 export async function getUserRoute(req: Request, res: Response) {
   const cUser = await enforceUser(req.headers.authorization);
   const user = await User.findById(req.params["id"]).exec();

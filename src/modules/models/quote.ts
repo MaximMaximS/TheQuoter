@@ -1,73 +1,9 @@
-import { Document, Model, Schema, Types, model } from "mongoose";
-import idValidator from "mongoose-id-validator";
-import { ServerError } from "../errors";
+import { Document, Error, Model, Schema, Types, model } from "mongoose";
+import mongooseIdValidator from "mongoose-id-validator2";
+import { ConflictError, ServerError } from "../errors";
 import Class, { IPreparedClass } from "./class";
 import Person, { IPreparedPerson } from "./person";
 import type { UserType } from "./user";
-
-interface IReaction {
-  like: boolean;
-  user: Types.ObjectId;
-}
-
-type ReactionModel = Model<IReaction>;
-
-const ReactionSchema = new Schema<IReaction, ReactionModel>({
-  like: {
-    type: Boolean,
-    required: true,
-  },
-  user: {
-    type: Schema.Types.ObjectId,
-    ref: "User",
-    required: true,
-  },
-});
-
-ReactionSchema.plugin(idValidator);
-
-interface IComment {
-  text: string;
-  user: Types.ObjectId;
-  reactions: IReaction[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface ICommentMethods {
-  resolveLikes(): number;
-
-  reactions: Types.DocumentArray<IReaction>;
-}
-
-type CommentModel = Model<IComment, unknown, ICommentMethods>;
-
-const CommentSchema = new Schema<IComment, CommentModel, ICommentMethods>(
-  {
-    text: {
-      type: String,
-      maxlength: 256,
-      trim: true,
-      required: true,
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    reactions: {
-      type: [ReactionSchema],
-      default: [],
-    },
-  },
-  { timestamps: true }
-);
-
-CommentSchema.plugin(idValidator);
-
-CommentSchema.method<IComment>("resolveLikes", function () {
-  return this.reactions.filter((el) => el.like).length;
-});
 
 type State = "pending" | "public";
 type Operation = "create" | "view" | "edit" | "publish" | "delete";
@@ -81,7 +17,7 @@ interface IQuote {
   class: Types.ObjectId | undefined;
   createdBy: Types.ObjectId;
   approvedBy: Types.ObjectId | undefined;
-  reactions: IReaction[];
+  likes: Types.ObjectId[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -94,22 +30,22 @@ export interface IPreparedQuote {
   originator: IPreparedPerson;
   class: IPreparedClass | undefined;
   state: State;
+  likes: number;
+  liked: boolean;
 }
 
-interface IQuoteMethodsAndOverrides {
-  prepare(): Promise<IPreparedQuote>;
-  resolveLikes(): number;
+interface IQuoteMethods {
+  prepare(user: UserType): Promise<IPreparedQuote>;
   can(user: UserType, opertation: Operation): boolean;
-
-  reactions: Types.DocumentArray<IReaction>;
+  like(user: UserType, remove?: boolean): Promise<void>;
 }
 
-type QuoteModel = Model<IQuote, unknown, IQuoteMethodsAndOverrides>;
+type QuoteModel = Model<IQuote, unknown, IQuoteMethods>;
 
 export type QuoteType = Document<Types.ObjectId, unknown, IQuote> &
-  IQuote & { _id: Types.ObjectId } & IQuoteMethodsAndOverrides;
+  IQuote & { _id: Types.ObjectId } & IQuoteMethods;
 
-const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
+const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethods>(
   {
     state: {
       type: String,
@@ -163,8 +99,8 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
         return this.state === "public";
       },
     },
-    reactions: {
-      type: [ReactionSchema],
+    likes: {
+      type: [{ type: Schema.Types.ObjectId, ref: "User" }],
       default: [],
       required: true,
     },
@@ -176,7 +112,7 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethodsAndOverrides>(
 
 QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
   "prepare",
-  async function () {
+  async function (user: UserType) {
     const classDoc = await Class.findById(this.class).exec();
     const originatorDoc = await Person.findById(this.originator).exec();
     if (originatorDoc === null) {
@@ -192,69 +128,73 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
       originator: originatorDoc.prepare(),
       class: classDoc !== null ? classDoc.prepare() : undefined,
       state: this.state,
+      likes: this.likes.length,
+      liked: this.likes.includes(user._id),
     };
     return doc;
   }
 );
 
-QuoteSchema.method<IQuote>("resolveLikes", function () {
-  return this.reactions.filter((el) => el.like).length;
-});
-
 // Cognitive Complexity ._.
 function canModerator(
   user: UserType,
-  quote: QuoteType,
+  quote: IQuote,
   operation: "create" | "view" | "edit" | "delete"
 ) {
   switch (operation) {
-    case "create":
+    case "create": {
       return (
         (quote.state === "public" && quote.class === user.class) ||
         (quote.state === "pending" && quote.class === undefined)
       );
+    }
 
-    case "view":
+    case "view": {
       return (
         (quote.state === "public" &&
           (quote.class === undefined || quote.class === user.class)) ||
         (quote.state === "pending" &&
           (quote.class === user.class || quote.originator === user._id))
       );
+    }
 
-    default:
+    default: {
       return (
         quote.state === "pending" &&
         (quote.class === user.class || quote.originator === user._id)
       );
+    }
   }
 }
 
 function canUser(
   user: UserType,
-  quote: QuoteType,
+  quote: IQuote,
   operation: "create" | "view" | "edit" | "delete"
 ) {
   switch (operation) {
-    case "create":
+    case "create": {
       return (
         quote.state === "pending" &&
         (quote.class === user.class || quote.class === undefined)
       );
-    case "view":
+    }
+    case "view": {
       return (
         (quote.state === "public" &&
           (quote.class === user.class || quote.class === undefined)) ||
         (quote.state === "pending" && quote.originator === user._id)
       );
+    }
 
-    default:
+    default: {
       return quote.state === "pending" && quote.originator === user._id;
+    }
   }
 }
 
 // Permissions resolver
-QuoteSchema.method<QuoteType>(
+QuoteSchema.method<IQuote>(
   "can",
   function (user: UserType, operation: Operation) {
     if (user.role === "admin") {
@@ -277,6 +217,31 @@ QuoteSchema.method<QuoteType>(
   }
 );
 
-QuoteSchema.plugin(idValidator);
+QuoteSchema.method<QuoteType>(
+  "like",
+  async function (user: UserType, remove = false) {
+    if (remove) {
+      this.likes = this.likes.filter((id) => !id.equals(user._id));
+    } else {
+      this.likes.push(user._id);
+    }
+    try {
+      await this.save();
+    } catch (error) {
+      if (
+        error instanceof Error.ValidationError &&
+        error.message.includes("Invalid ID")
+      ) {
+        throw new ConflictError("user");
+      }
+
+      throw error;
+    }
+  }
+);
+
+QuoteSchema.plugin(mongooseIdValidator, {
+  message: "Invalid ID",
+});
 
 export default model<IQuote, QuoteModel>("Quote", QuoteSchema, "quotes");

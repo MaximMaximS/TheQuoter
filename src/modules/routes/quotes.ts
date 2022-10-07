@@ -20,11 +20,13 @@ export async function getQuoteRoute(req: Request, res: Response) {
   if (!quoteFound.can(user, "view")) {
     throw new NotFoundError();
   }
-  const preparedQuote = await quoteFound.prepare();
+  const preparedQuote = await quoteFound.prepare(user);
   res.json(preparedQuote);
 }
 
 export async function searchQuotesRoute(req: Request, res: Response) {
+  const user = await enforceUser(req.headers.authorization);
+
   let query = Quote.find();
   const originator = idOrUndefined(req.query["originator"], "originator");
   if (originator !== undefined) {
@@ -44,12 +46,11 @@ export async function searchQuotesRoute(req: Request, res: Response) {
   }
   const quotes = await query.exec();
 
-  // Permission check
-  const user = await enforceUser(req.headers.authorization);
-
-  // Simplify all quotes
+  // Permission check and prepare all quotes
   const quotesFound = await Promise.all(
-    quotes.filter((quote) => quote.can(user, "view")).map((q) => q.prepare())
+    quotes
+      .filter((quote) => quote.can(user, "view"))
+      .map((q) => q.prepare(user))
   );
 
   res.json(quotesFound); // Send the found enteries
@@ -80,7 +81,7 @@ export async function createQuoteRoute(req: Request, res: Response) {
 
   const saved = await quote.save();
 
-  res.status(publish ? 201 : 202).json(saved.prepare());
+  res.status(publish ? 201 : 202).json(saved.prepare(user));
 }
 
 export async function editQuoteRoute(req: Request, res: Response) {
@@ -135,7 +136,7 @@ export async function editQuoteRoute(req: Request, res: Response) {
 
   const saved = await current.save();
 
-  res.json(await saved.prepare());
+  res.json(await saved.prepare(user));
 }
 
 export async function publishRoute(req: Request, res: Response) {
@@ -156,10 +157,11 @@ export async function publishRoute(req: Request, res: Response) {
   current.state = "public";
   const saved = await current.save();
 
-  res.json(await saved.prepare());
+  res.json(await saved.prepare(user));
 }
 
-export async function randomQuoteRoute(_req: Request, res: Response) {
+export async function randomQuoteRoute(req: Request, res: Response) {
+  const user = await enforceUser(req.headers.authorization);
   const quotes = await Quote.find({
     state: "public",
     class: { $exists: false },
@@ -168,7 +170,11 @@ export async function randomQuoteRoute(_req: Request, res: Response) {
   if (quote === undefined) {
     throw new ServerError("Quote randomization failed");
   }
-  res.json(await quote.prepare());
+  if (!quote.can(user, "view")) {
+    throw new ServerError("Quote randomization failed");
+  }
+
+  res.json(await quote.prepare(user));
 }
 
 export async function deleteQuoteRoute(req: Request, res: Response) {
@@ -189,4 +195,24 @@ export async function deleteQuoteRoute(req: Request, res: Response) {
 
   await quote.remove();
   res.sendStatus(204);
+}
+
+// Like route
+export async function likeQuoteRoute(req: Request, res: Response) {
+  const user = await enforceUser(req.headers.authorization);
+  const quote = await Quote.findById(req.params["id"]).exec();
+
+  if (quote === null) {
+    throw new NotFoundError();
+  }
+
+  if (!quote.can(user, "view")) {
+    throw new NotFoundError();
+  }
+
+  const remove = stringOrUndefined(req.body.action, "action") === "remove";
+
+  await quote.like(user, remove);
+
+  res.json(await quote.prepare(user));
 }

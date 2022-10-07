@@ -1,25 +1,35 @@
 export function genValidatorMessage(path: string, kind: string) {
   switch (kind) {
-    case "required":
+    case "required": {
       return `${path} is required`;
-    case "maxlength":
+    }
+    case "maxlength": {
       return `${path} is too long`;
-    case "minlength":
+    }
+    case "minlength": {
       return `${path} is too short`;
-    case "unique":
+    }
+    case "unique": {
       return `${path} is already taken`;
-    case "match":
+    }
+    case "match": {
       return `${path} does not match the pattern`;
-    case "ObjectId":
+    }
+    case "ObjectId": {
       return `${path} is not a valid ObjectId`;
-    case "state":
+    }
+    case "state": {
       return `${path} can be only "pending" or "public"`;
-    case "boolean":
+    }
+    case "boolean": {
       return `${path} must be a boolean`;
-    case "number":
+    }
+    case "number": {
       return `${path} must be a number`;
-    default:
+    }
+    default: {
       return `${path} is not valid (${kind})`;
+    }
   }
 }
 

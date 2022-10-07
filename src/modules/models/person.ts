@@ -1,5 +1,4 @@
 import { Document, Model, Schema, Types, model } from "mongoose";
-import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
 interface IPerson {
@@ -48,7 +47,6 @@ PersonSchema.method("prepare", function (): IPreparedPerson {
 });
 
 PersonSchema.plugin(uniqueValidator);
-PersonSchema.plugin(idValidator);
 
 export type PersonType = Document<Types.ObjectId, unknown, IPerson> &
   IPerson & { _id: Types.ObjectId } & IPersonMethods;

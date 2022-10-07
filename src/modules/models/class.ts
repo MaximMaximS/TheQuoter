@@ -1,5 +1,4 @@
 import { Document, Model, Schema, Types, model } from "mongoose";
-import idValidator from "mongoose-id-validator";
 import uniqueValidator from "mongoose-unique-validator";
 
 interface IClass {
@@ -40,7 +39,6 @@ ClassSchema.method("prepare", function (): IPreparedClass {
 });
 
 ClassSchema.plugin(uniqueValidator);
-ClassSchema.plugin(idValidator);
 
 export type ClassType = Document<Types.ObjectId, unknown, IClass> &
   IClass & { _id: Types.ObjectId } & IClassMethods;

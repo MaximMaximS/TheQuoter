@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Document, Model, Schema, Types, model } from "mongoose";
-import idValidator from "mongoose-id-validator";
+import idValidator from "mongoose-id-validator2";
 import uniqueValidator from "mongoose-unique-validator";
 import { ServerError, ValidatorError } from "../errors";
 
@@ -82,6 +82,9 @@ UserSchema.plugin(uniqueValidator);
 UserSchema.plugin(idValidator);
 
 UserSchema.pre("save", function (next) {
+  if (!this.isModified("password")) {
+    return next();
+  }
   if (this.password.length < 6) {
     throw new ValidatorError("password", "minlength");
   }
