@@ -41,6 +41,7 @@ jobs:
         run: npm run build
 
       - name: Get current package version
+        id: package-version
         uses: martinbeentjes/npm-get-version-action@v1.2.3
 
       - name: Build and push Docker image
