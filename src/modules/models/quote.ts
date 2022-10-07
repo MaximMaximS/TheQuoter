@@ -26,49 +26,6 @@ const ReactionSchema = new Schema<IReaction, ReactionModel>({
 
 ReactionSchema.plugin(idValidator);
 
-interface IComment {
-  text: string;
-  user: Types.ObjectId;
-  reactions: IReaction[];
-  createdAt: Date;
-  updatedAt: Date;
-}
-
-interface ICommentMethods {
-  resolveLikes(): number;
-
-  reactions: Types.DocumentArray<IReaction>;
-}
-
-type CommentModel = Model<IComment, unknown, ICommentMethods>;
-
-const CommentSchema = new Schema<IComment, CommentModel, ICommentMethods>(
-  {
-    text: {
-      type: String,
-      maxlength: 256,
-      trim: true,
-      required: true,
-    },
-    user: {
-      type: Schema.Types.ObjectId,
-      ref: "User",
-      required: true,
-    },
-    reactions: {
-      type: [ReactionSchema],
-      default: [],
-    },
-  },
-  { timestamps: true }
-);
-
-CommentSchema.plugin(idValidator);
-
-CommentSchema.method<IComment>("resolveLikes", function () {
-  return this.reactions.filter((el) => el.like).length;
-});
-
 type State = "pending" | "public";
 type Operation = "create" | "view" | "edit" | "publish" | "delete";
 
@@ -198,7 +155,12 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
 );
 
 QuoteSchema.method<IQuote>("resolveLikes", function () {
-  return this.reactions.filter((el) => el.like).length;
+  // If reaction is a like, add 1, else subtract 1
+  let likes = 0;
+  for (const reaction of this.reactions) {
+    likes += reaction.like ? 1 : -1;
+  }
+  return likes;
 });
 
 // Cognitive Complexity ._.
@@ -208,25 +170,28 @@ function canModerator(
   operation: "create" | "view" | "edit" | "delete"
 ) {
   switch (operation) {
-    case "create":
+    case "create": {
       return (
         (quote.state === "public" && quote.class === user.class) ||
         (quote.state === "pending" && quote.class === undefined)
       );
+    }
 
-    case "view":
+    case "view": {
       return (
         (quote.state === "public" &&
           (quote.class === undefined || quote.class === user.class)) ||
         (quote.state === "pending" &&
           (quote.class === user.class || quote.originator === user._id))
       );
+    }
 
-    default:
+    default: {
       return (
         quote.state === "pending" &&
         (quote.class === user.class || quote.originator === user._id)
       );
+    }
   }
 }
 
@@ -236,20 +201,23 @@ function canUser(
   operation: "create" | "view" | "edit" | "delete"
 ) {
   switch (operation) {
-    case "create":
+    case "create": {
       return (
         quote.state === "pending" &&
         (quote.class === user.class || quote.class === undefined)
       );
-    case "view":
+    }
+    case "view": {
       return (
         (quote.state === "public" &&
           (quote.class === user.class || quote.class === undefined)) ||
         (quote.state === "pending" && quote.originator === user._id)
       );
+    }
 
-    default:
+    default: {
       return quote.state === "pending" && quote.originator === user._id;
+    }
   }
 }
 

@@ -1,9 +1,7 @@
 name: CI/CD
 
 on:
-  push:
-    tags:
-      - "*"
+  workflow_dispatch:
 
 jobs:
   cd:
@@ -44,4 +42,4 @@ jobs:
         with:
           context: .
           push: true
-          tags: maximmaxims/thequoter:${{ env.GITHUB_REF_NAME }}
+          tags: maximmaxims/thequoter:${{ github.ref_name }}
