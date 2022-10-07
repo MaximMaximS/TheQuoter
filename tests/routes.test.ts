@@ -7,6 +7,7 @@ import {
   fillDatabase,
   getToken,
   init,
+  quoteId,
 } from "./db";
 
 beforeAll(async () => {
@@ -383,5 +384,57 @@ describe("quotes", () => {
       .expect("Content-Type", /json/)
       .expect(200);
     expect(res.body).toHaveLength(2);
+  });
+
+  test("POST /quotes/:id/like", async () => {
+    // Expect 401
+    await request(app).post(`/quotes/${quoteId.toString()}/like`).expect(401);
+
+    const user = await getToken("user");
+
+    // Expect 200
+    let res = await request(app)
+      .post(`/quotes/${quoteId.toString()}/like`)
+      .set("Authorization", `Bearer ${user}`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body.likes).toBe(1);
+    expect(res.body.liked).toBe(true);
+
+    // Expect 200 if another user likes
+    const user2 = await getToken("admin");
+    res = await request(app)
+      .post(`/quotes/${quoteId.toString()}/like`)
+      .set("Authorization", `Bearer ${user2}`)
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body.likes).toBe(2);
+    expect(res.body.liked).toBe(true);
+
+    // Unliking (add { remove: true } to body)
+    res = await request(app)
+      .post(`/quotes/${quoteId.toString()}/like`)
+      .set("Authorization", `Bearer ${user2}`)
+      .send({ action: "remove" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body.likes).toBe(1);
+    expect(res.body.liked).toBe(false);
+
+    // Expect 400 if already liked
+    await request(app)
+      .post(`/quotes/${quoteId.toString()}/like`)
+      .set("Authorization", `Bearer ${user}`)
+      .expect(409);
+
+    // Unlike again
+    res = await request(app)
+      .post(`/quotes/${quoteId.toString()}/like`)
+      .set("Authorization", `Bearer ${user}`)
+      .send({ action: "remove" })
+      .expect("Content-Type", /json/)
+      .expect(200);
+    expect(res.body.likes).toBe(0);
+    expect(res.body.liked).toBe(false);
   });
 });

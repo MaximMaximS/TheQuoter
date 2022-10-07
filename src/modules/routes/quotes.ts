@@ -196,3 +196,23 @@ export async function deleteQuoteRoute(req: Request, res: Response) {
   await quote.remove();
   res.sendStatus(204);
 }
+
+// Like route
+export async function likeQuoteRoute(req: Request, res: Response) {
+  const user = await enforceUser(req.headers.authorization);
+  const quote = await Quote.findById(req.params["id"]).exec();
+
+  if (quote === null) {
+    throw new NotFoundError();
+  }
+
+  if (!quote.can(user, "view")) {
+    throw new NotFoundError();
+  }
+
+  const remove = stringOrUndefined(req.body.action, "action") === "remove";
+
+  await quote.like(user, remove);
+
+  res.json(await quote.prepare(user));
+}

@@ -16,6 +16,7 @@ import {
   deleteQuoteRoute,
   editQuoteRoute,
   getQuoteRoute,
+  likeQuoteRoute,
   publishRoute,
   randomQuoteRoute,
   searchQuotesRoute,
@@ -122,6 +123,12 @@ router
 router
   .route("/quotes/:id/publish")
   .post(asyncMiddleware(publishRoute))
+  .all(methodNotAllowed);
+
+// Like a quote
+router
+  .route("/quotes/:id/like")
+  .post(asyncMiddleware(likeQuoteRoute))
   .all(methodNotAllowed);
 
 // It's 5!

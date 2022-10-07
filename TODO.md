@@ -12,7 +12,6 @@
 
 ## In Progress
 
-- [ ] Likes
 - [ ] Other routes
 
 ## Done ✓
@@ -24,3 +23,4 @@
 - [x] Properly implement all permissions
 - [x] Add quote archivation
 - [x] Remake permission system
+- [x] Likes

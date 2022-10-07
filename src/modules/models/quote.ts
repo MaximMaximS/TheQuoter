@@ -1,6 +1,6 @@
-import { Document, Model, Schema, Types, model } from "mongoose";
-import idValidator from "mongoose-id-validator";
-import { ServerError } from "../errors";
+import { Document, Error, Model, Schema, Types, model } from "mongoose";
+import mongooseIdValidator from "mongoose-id-validator2";
+import { ConflictError, ServerError } from "../errors";
 import Class, { IPreparedClass } from "./class";
 import Person, { IPreparedPerson } from "./person";
 import type { UserType } from "./user";
@@ -37,6 +37,7 @@ export interface IPreparedQuote {
 interface IQuoteMethods {
   prepare(user: UserType): Promise<IPreparedQuote>;
   can(user: UserType, opertation: Operation): boolean;
+  like(user: UserType, remove?: boolean): Promise<void>;
 }
 
 type QuoteModel = Model<IQuote, unknown, IQuoteMethods>;
@@ -99,17 +100,9 @@ const QuoteSchema = new Schema<IQuote, QuoteModel, IQuoteMethods>(
       },
     },
     likes: {
-      type: [Schema.Types.ObjectId],
-      ref: "User",
+      type: [{ type: Schema.Types.ObjectId, ref: "User" }],
       default: [],
       required: true,
-      validate: {
-        // Check for duplicates
-        validator: (v: Types.ObjectId[]) => {
-          const set = new Set(v);
-          return set.size === v.length;
-        },
-      },
     },
   },
   {
@@ -145,7 +138,7 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
 // Cognitive Complexity ._.
 function canModerator(
   user: UserType,
-  quote: QuoteType,
+  quote: IQuote,
   operation: "create" | "view" | "edit" | "delete"
 ) {
   switch (operation) {
@@ -176,7 +169,7 @@ function canModerator(
 
 function canUser(
   user: UserType,
-  quote: QuoteType,
+  quote: IQuote,
   operation: "create" | "view" | "edit" | "delete"
 ) {
   switch (operation) {
@@ -201,7 +194,7 @@ function canUser(
 }
 
 // Permissions resolver
-QuoteSchema.method<QuoteType>(
+QuoteSchema.method<IQuote>(
   "can",
   function (user: UserType, operation: Operation) {
     if (user.role === "admin") {
@@ -224,6 +217,31 @@ QuoteSchema.method<QuoteType>(
   }
 );
 
-QuoteSchema.plugin(idValidator);
+QuoteSchema.method<QuoteType>(
+  "like",
+  async function (user: UserType, remove = false) {
+    if (remove) {
+      this.likes = this.likes.filter((id) => !id.equals(user._id));
+    } else {
+      this.likes.push(user._id);
+    }
+    try {
+      await this.save();
+    } catch (error) {
+      if (
+        error instanceof Error.ValidationError &&
+        error.message.includes("Invalid ID")
+      ) {
+        throw new ConflictError("user");
+      }
+
+      throw error;
+    }
+  }
+);
+
+QuoteSchema.plugin(mongooseIdValidator, {
+  message: "Invalid ID",
+});
 
 export default model<IQuote, QuoteModel>("Quote", QuoteSchema, "quotes");

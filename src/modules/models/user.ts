@@ -1,7 +1,7 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Document, Model, Schema, Types, model } from "mongoose";
-import idValidator from "mongoose-id-validator";
+import idValidator from "mongoose-id-validator2";
 import uniqueValidator from "mongoose-unique-validator";
 import { ServerError, ValidatorError } from "../errors";
 
