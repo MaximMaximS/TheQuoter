@@ -79,7 +79,7 @@
     "helmet": "^6.0.0",
     "jsonwebtoken": "^8.5.1",
     "middleware-async": "^1.3.5",
-    "mongoose": "^6.6.5",
+    "mongoose": "^6.6.6",
     "mongoose-extra-validators": "^1.0.0-beta.5",
     "mongoose-id-validator2": "^0.0.2",
     "mongoose-unique-validator": "^3.1.0"
