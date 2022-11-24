@@ -30,7 +30,7 @@ import {
   loginUserRoute,
   registerUserRoute,
 } from "./routes/users";
-import { methodNotAllowed } from "./middleware";
+import { checkJwt, methodNotAllowed } from "./middleware";
 
 const router = Router();
 
@@ -139,6 +139,6 @@ router.route("/its5").all(its5Route);
 router.route("/echo").all(echoRoute);
 
 // Nothing
-router.route("/").all(susRoute);
+router.route("/").all(checkJwt, susRoute);
 
 export default router;

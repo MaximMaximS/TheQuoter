@@ -1,4 +1,5 @@
 import type { ErrorRequestHandler, Request, Response } from "express";
+import { auth } from "express-oauth2-jwt-bearer";
 import {
   JsonWebTokenError,
   NotBeforeError,
@@ -13,6 +14,16 @@ import {
   ValidatorError,
   genValidatorMessage,
 } from "./errors";
+import { string } from "./utils";
+
+export const checkJwt = auth({
+  audience: string(process.env["JWT_AUDIENCE"], "JWT_AUDIENCE"),
+  issuerBaseURL: string(
+    process.env["JWT_ISSUER_BASE_URL"],
+    "JWT_ISSUER_BASE_URL"
+  ),
+  tokenSigningAlg: "RS256",
+});
 
 export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   if (err instanceof ValidatorError) {
