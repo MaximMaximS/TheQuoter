@@ -126,7 +126,7 @@ QuoteSchema.method<IQuote & { _id: Types.ObjectId }>(
       text: this.text,
       note: this.note,
       originator: originatorDoc.prepare(),
-      class: classDoc !== null ? classDoc.prepare() : undefined,
+      class: classDoc === null ? undefined : classDoc.prepare(),
       state: this.state,
       likes: this.likes.length,
       liked: this.likes.includes(user._id),

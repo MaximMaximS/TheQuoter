@@ -20,13 +20,13 @@ export async function getUser(authHeader: string) {
     throw new ServerError("JWT Payload is not an object");
   }
   const user = await User.findById(uid["id"]).exec();
-  return user !== null ? user : undefined;
+  return user === null ? undefined : user;
 }
 
 // Get user from request and check if user has permit
 export async function enforceUser(authHeader: string | undefined) {
   // Verify token
-  const user = authHeader !== undefined ? await getUser(authHeader) : undefined;
+  const user = authHeader === undefined ? undefined : await getUser(authHeader);
   // If admin false then enforce moderator or admin, otherwise enforce admin
   if (user === undefined) {
     throw new IncorrectLoginError();
