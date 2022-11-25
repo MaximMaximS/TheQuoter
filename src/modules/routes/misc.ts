@@ -29,8 +29,7 @@ export function susRoute(_req: Request, res: Response) {
     );
 }
 
-export function auth0test(req: Request, res: Response) {
-  console.log(req.auth);
-  void getUserInfo(string(req.auth?.token, "token"));
-  res.sendStatus(200);
+export async function auth0test(req: Request, res: Response) {
+  const result = await getUserInfo(string(req.auth?.token, "token"));
+  res.json(result.data);
 }

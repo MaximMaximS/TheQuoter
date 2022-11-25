@@ -1,7 +1,6 @@
 import axios from "axios";
 import { verify } from "jsonwebtoken";
 import { Types } from "mongoose";
-import { writeFileSync } from "node:fs";
 import User from "./models/user";
 import { IncorrectLoginError, ServerError, ValidatorError } from "./errors";
 
@@ -108,14 +107,14 @@ export function number(num: unknown, path: string): number {
   throw new ValidatorError(path, "number");
 }
 
-export async function getUserInfo(token: string): Promise<void> {
+export function getUserInfo(token: string) {
   const url =
     string(process.env["JWT_ISSUER_BASE_URL"], "JWT_ISSUER_BASE_URL") +
     "userinfo";
-  const response = await axios.get(url, {
+  return axios.get(url, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
+    validateStatus: () => true,
   });
-  writeFileSync("userinfo.json", JSON.stringify(response.data, undefined, 2));
 }

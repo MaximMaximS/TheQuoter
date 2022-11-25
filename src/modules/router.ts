@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Router } from "express";
+import asyncMiddleware from "middleware-async";
 import { auth0test, susRoute } from "./routes/misc";
 import { checkJwt } from "./middleware";
 
@@ -114,6 +115,6 @@ router.route("/echo").all(echoRoute);
 // Nothing
 router.route("/").all(susRoute);
 
-router.route("/authtest").all(checkJwt, auth0test);
+router.route("/authtest").all(checkJwt, asyncMiddleware(auth0test));
 
 export default router;
