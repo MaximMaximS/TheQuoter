@@ -1,9 +1,13 @@
+import axios from "axios";
 import { verify } from "jsonwebtoken";
 import { Types } from "mongoose";
+import { writeFileSync } from "node:fs";
 import User from "./models/user";
 import { IncorrectLoginError, ServerError, ValidatorError } from "./errors";
 
-// Get user from authorization header
+/*
+ * @deprecated
+ */
 export async function getUser(authHeader: string) {
   // Check if token begins with "Bearer "
   if (!authHeader.startsWith("Bearer ")) {
@@ -24,6 +28,9 @@ export async function getUser(authHeader: string) {
 }
 
 // Get user from request and check if user has permit
+/*
+ * @deprecated
+ */
 export async function enforceUser(authHeader: string | undefined) {
   // Verify token
   const user = authHeader === undefined ? undefined : await getUser(authHeader);
@@ -99,4 +106,16 @@ export function number(num: unknown, path: string): number {
     }
   }
   throw new ValidatorError(path, "number");
+}
+
+export async function getUserInfo(token: string): Promise<void> {
+  const url =
+    string(process.env["JWT_ISSUER_BASE_URL"], "JWT_ISSUER_BASE_URL") +
+    "userinfo";
+  const response = await axios.get(url, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  writeFileSync("userinfo.json", JSON.stringify(response.data, undefined, 2));
 }

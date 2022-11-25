@@ -1,4 +1,3 @@
-import { JsonWebTokenError } from "jsonwebtoken";
 import { Types } from "mongoose";
 import { ValidatorError } from "../src/modules/errors";
 import * as utils from "../src/modules/utils";
@@ -14,14 +13,6 @@ describe("utils", () => {
   // Restore environment variables
   afterEach(() => {
     process.env = env;
-  });
-
-  test("function getUser", async () => {
-    // Throw error if token is invalid
-    process.env["JWT_SECRET"] = "secret";
-    await expect(utils.getUser("Bearer foobar")).rejects.toThrow(
-      JsonWebTokenError
-    );
   });
 
   test("function stringOrUndefined", () => {

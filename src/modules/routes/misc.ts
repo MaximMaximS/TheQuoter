@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { NotFoundError } from "../errors";
+import { getUserInfo, string } from "../utils";
 
 export function its5Route(_req: Request, res: Response) {
   res.status(418).json({ message: "It's 5!" });
@@ -30,5 +31,6 @@ export function susRoute(_req: Request, res: Response) {
 
 export function auth0test(req: Request, res: Response) {
   console.log(req.auth);
+  void getUserInfo(string(req.auth?.token, "token"));
   res.sendStatus(200);
 }

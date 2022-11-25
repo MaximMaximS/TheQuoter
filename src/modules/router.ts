@@ -1,39 +1,11 @@
 /* eslint-disable @typescript-eslint/no-misused-promises */
 import { Router } from "express";
-import asyncMiddleware from "middleware-async";
-import {
-  createClassRoute,
-  getClassRoute,
-  searchClassesRoute,
-} from "./routes/classes";
-import { echoRoute, its5Route, susRoute } from "./routes/misc";
-import {
-  createPersonRoute,
-  getPersonRoute,
-  searchPeopleRoute,
-} from "./routes/people";
-import {
-  createQuoteRoute,
-  deleteQuoteRoute,
-  editQuoteRoute,
-  getQuoteRoute,
-  likeQuoteRoute,
-  publishRoute,
-  randomQuoteRoute,
-  searchQuotesRoute,
-} from "./routes/quotes";
-import {
-  approveGuest,
-  getProfileRoute,
-  getUserRoute,
-  listGuests,
-  loginUserRoute,
-  registerUserRoute,
-} from "./routes/users";
-import { checkJwt, methodNotAllowed } from "./middleware";
+import { auth0test, susRoute } from "./routes/misc";
+import { checkJwt } from "./middleware";
 
 const router = Router();
 
+/**
 router
   .route("/account")
   // Get the user's own profile
@@ -137,8 +109,11 @@ router.route("/its5").all(its5Route);
 
 // Echo (development only)
 router.route("/echo").all(echoRoute);
+*/
 
 // Nothing
-router.route("/").all(checkJwt, susRoute);
+router.route("/").all(susRoute);
+
+router.route("/authtest").all(checkJwt, auth0test);
 
 export default router;
