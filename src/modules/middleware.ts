@@ -1,22 +1,10 @@
 import type { ErrorRequestHandler, Request, Response } from "express";
-import {
-  InvalidTokenError,
-  UnauthorizedError,
-  auth,
-} from "express-oauth2-jwt-bearer";
-import {
-  JsonWebTokenError,
-  NotBeforeError,
-  TokenExpiredError,
-} from "jsonwebtoken";
-import { Error } from "mongoose";
+import { auth } from "express-oauth2-jwt-bearer";
 import {
   ConflictError,
   ForbiddenError,
-  IncorrectLoginError,
   NotFoundError,
   ValidatorError,
-  genValidatorMessage,
 } from "./errors";
 import { string } from "./utils";
 
@@ -29,29 +17,6 @@ export const checkJwt = auth({
   tokenSigningAlg: "RS256",
 });
 
-function processValidationError(err: Error.ValidationError, res: Response) {
-  // Extract first, possible TODO to send all of them
-  const name = Object.keys(err.errors)[0];
-  if (name === undefined) {
-    res.status(500).json({
-      message: "Error returning broken in validation",
-    });
-  } else {
-    const first = err.errors[name];
-    if (first === undefined) {
-      res.status(500).json({
-        message: "Error returning broken in validation",
-      });
-    } else {
-      res.status(400).json({
-        message: genValidatorMessage(first.path, first.kind),
-        path: first.path,
-        kind: first.kind,
-      });
-    }
-  }
-}
-
 export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
   // Database Errors
   if (err instanceof ValidatorError) {
@@ -61,28 +26,6 @@ export const errorHandler: ErrorRequestHandler = (err, _req, res, next) => {
       path: err.path,
       kind: err.kind,
     });
-  } else if (err instanceof Error.ValidationError) {
-    processValidationError(err, res);
-
-    // Auth Errors
-  } else if (err instanceof InvalidTokenError) {
-    res.status(err.statusCode).json({
-      message: err.message,
-      code: err.code,
-    });
-  } else if (err instanceof UnauthorizedError) {
-    console.log(err);
-    res.sendStatus(401);
-  } else if (
-    err instanceof IncorrectLoginError ||
-    err instanceof TokenExpiredError ||
-    err instanceof NotBeforeError ||
-    err instanceof JsonWebTokenError
-    // All before to be removed
-  ) {
-    res.sendStatus(401);
-
-    // HTTP Errors
   } else if (err instanceof NotFoundError) {
     next();
   } else if (err instanceof ForbiddenError) {

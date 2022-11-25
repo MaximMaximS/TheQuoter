@@ -1,4 +1,3 @@
-import { Types } from "mongoose";
 import { ValidatorError } from "../src/modules/errors";
 import * as utils from "../src/modules/utils";
 
@@ -25,21 +24,5 @@ describe("utils", () => {
   test("function string", () => {
     expect(utils.string("foo", "bar")).toBe("foo");
     expect(() => utils.string(undefined, "bar")).toThrow(ValidatorError);
-  });
-
-  test("function idOrUndefined", () => {
-    expect(utils.idOrUndefined(undefined, "bar")).toBeUndefined();
-    expect(() => utils.idOrUndefined("foo", "bar")).toThrow(ValidatorError);
-    const id = utils.idOrUndefined("62a755f9f91dea1d89620b11", "bar");
-    expect(id).toBeInstanceOf(Types.ObjectId);
-    expect(id?.toString()).toBe("62a755f9f91dea1d89620b11");
-  });
-
-  test("function id", () => {
-    expect(() => utils.id(undefined, "bar")).toThrow(ValidatorError);
-    expect(() => utils.id("foo", "bar")).toThrow(ValidatorError);
-    expect(utils.id("62a755f9f91dea1d89620b11", "bar").toString()).toBe(
-      "62a755f9f91dea1d89620b11"
-    );
   });
 });

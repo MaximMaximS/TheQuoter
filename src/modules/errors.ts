@@ -18,15 +18,6 @@ export function genValidatorMessage(path: string, kind: string) {
     case "ObjectId": {
       return `${path} is not a valid ObjectId`;
     }
-    case "state": {
-      return `${path} can be only "pending" or "public"`;
-    }
-    case "boolean": {
-      return `${path} must be a boolean`;
-    }
-    case "number": {
-      return `${path} must be a number`;
-    }
     default: {
       return `${path} is not valid (${kind})`;
     }
@@ -55,13 +46,6 @@ export class ServerError extends Error {
       this.full = new Error(error);
     }
     this.name = "ServerError";
-  }
-}
-
-export class IncorrectLoginError extends Error {
-  constructor() {
-    super("IncorrectLogin");
-    this.name = "IncorrectLoginError";
   }
 }
 
